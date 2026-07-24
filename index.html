@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Adobe製品やLLMエンジニアリングなど、特定分野に限定しない個人の学習ノート・ナレッジ公開サイト。">
+<title>pages — 学習ノート・ナレッジ公開</title>
+<style>
+  :root {
+    --ink: #1b1b1b;
+    --ink-soft: #4a4a4a;
+    --muted: #7a7a7a;
+    --line: #e4e0d8;
+    --paper: #faf8f4;
+    --surface: #ffffff;
+    --accent: #b3401f;
+    --accent-soft: #f4e3da;
+
+    --font-display: "Iowan Old Style", "Georgia", "Hiragino Mincho ProN", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+
+    --text-hero: clamp(2.4rem, 1.6rem + 3.2vw, 4.2rem);
+    --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+    --text-base: clamp(1rem, 0.95rem + 0.2vw, 1.08rem);
+
+    --space-section: clamp(3rem, 2.4rem + 3vw, 6rem);
+    --radius: 14px;
+    --duration: 220ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: 1.8;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap {
+    width: min(880px, 100% - 48px);
+    margin-inline: auto;
+  }
+
+  header.hero {
+    padding: var(--space-section) 0 calc(var(--space-section) * 0.6);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 20px;
+    color: var(--ink);
+  }
+
+  .lede {
+    max-width: 56ch;
+    color: var(--ink-soft);
+    font-size: var(--text-lg);
+    line-height: 1.7;
+  }
+
+  main {
+    padding: var(--space-section) 0;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .section-heading .index {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .categories {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-bottom: calc(var(--space-section) * 0.7);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px 26px 22px;
+    transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease), border-color var(--duration) var(--ease);
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(27, 27, 27, 0.08);
+    border-color: var(--accent-soft);
+  }
+
+  .card h3 {
+    font-size: 1.15rem;
+    margin: 0 0 10px;
+  }
+
+  .card h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .card h3 a:hover { color: var(--accent); }
+
+  .card p.desc {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 0 0 16px;
+  }
+
+  .card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  .card li + li { margin-top: 8px; }
+
+  .card a.entry {
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card a.entry::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+  }
+
+  .card a.entry:hover { color: var(--accent); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 32px 0 60px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.9;
+  }
+
+  footer a { color: var(--muted); text-decoration-color: var(--line); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Notes &amp; Knowledge</span>
+    <h1>学びを、書いて、公開する。</h1>
+    <p class="lede">
+      Adobe 製品の内部動作から LLM エンジニアリングまで、特定のトピックに限定せず書き溜めている個人の学習メモです。
+      理解を深めるたびに、このサイトも育っていきます。
+    </p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <div class="section-heading">
+      <span class="index">01</span>
+      <h2>Adobe Analytics</h2>
+    </div>
+    <div class="categories">
+      <article class="card">
+        <h3><a href="adobe-analytics/AA_segment_mechanism.html">セグメントをデータ抽出装置として理解する</a></h3>
+        <p class="desc">図解・対話的な説明つきの本文コンテンツ。</p>
+        <ul>
+          <li><a class="entry" href="adobe-analytics/AA_segment_mechanism.html">本文を読む</a></li>
+          <li><a class="entry" href="adobe-analytics/AA_segment_quiz.html">理解度確認テスト（100問）</a></li>
+          <li><a class="entry" href="adobe-analytics/">カテゴリ索引（README）</a></li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="section-heading">
+      <span class="index">02</span>
+      <h2>LLM Engineering</h2>
+    </div>
+    <div class="categories">
+      <article class="card">
+        <h3><a href="llm-engineering/llm-skill-execution-loop-guide.html">LLMサービスはどう「賢く動く」のか</a></h3>
+        <p class="desc">Skill・RAG・実行ループ・ChatGPT の構造を一つの地図として理解するための詳細ガイド。</p>
+        <ul>
+          <li><a class="entry" href="llm-engineering/llm-skill-execution-loop-guide.html">本文を読む</a></li>
+          <li><a class="entry" href="llm-engineering/">カテゴリ索引（README）</a></li>
+        </ul>
+      </article>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      本サイトの資料はすべて個人による学習・共有目的のコンテンツであり、言及する企業・製品の公式見解やサポート文書ではありません。
+      記載内容の正確性・完全性・将来にわたる妥当性を保証するものではありません。
+    </p>
+    <p>
+      All materials on this site are personal learning notes shared for educational purposes and are not official statements of any company or product mentioned.
+    </p>
+    <p><a href="https://github.com/n0r1h0/pages">GitHub リポジトリ</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

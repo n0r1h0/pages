@@ -1,0 +1,2898 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adobe Analytics セグメント：データ抽出装置として理解する</title>
+<style>
+:root {
+  --black: #000000;
+  --red: #EB1000;
+  --border: #d8d4ce;
+  --border-light: #ece9e4;
+  --code-bg: #f4f2ef;
+  --code-block-bg: #1e2433;
+  --code-block-text: #ffffff;
+  --page-bg: #f0ede8;
+  --sidebar-w: 288px;
+  --content-w: 720px;
+  /* Table highlights – background only, text stays black */
+  --hl-yes-bg: #d4f0e0;
+  --hl-no-opacity: 0.35;
+  --hl-ng-bg: #fde8e8;
+  --hl-ok-bg: #d4f0e0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+  font-size: 15.5px;
+  line-height: 1.88;
+  color: var(--black);
+  background: var(--page-bg);
+  display: flex;
+}
+
+/* ── Sidebar TOC ── */
+#toc {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  padding: 32px 14px 32px 18px;
+  position: fixed;
+  top: 0; left: 0;
+  overflow-y: auto;
+  font-size: 12px;
+  background: #fff;
+  border-right: 1px solid var(--border);
+  box-shadow: 2px 0 8px rgba(0,0,0,.05);
+}
+#toc-heading {
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--black);
+  margin-bottom: 14px;
+}
+#toc ul { list-style: none; }
+#toc li { margin: 0; }
+#toc a {
+  display: block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--black);
+  text-decoration: none;
+  line-height: 1.45;
+  transition: background .1s, color .1s;
+}
+#toc a:hover { color: var(--black); background: #ece9e4; }
+#toc a.active { color: var(--black); font-weight: 700; background: #e4e0da; }
+#toc .toc-h2 { font-weight: 700; color: var(--black); margin-top: 8px; }
+#toc .toc-h3 { padding-left: 14px; font-size: 11.5px; }
+#toc .toc-h4 { padding-left: 26px; font-size: 11px; color: var(--black); }
+
+/* Accordion */
+.toc-group > a.toc-h2::after {
+  content: '▸';
+  float: right;
+  font-size: .72em;
+  margin-top: 2px;
+  transition: transform .2s;
+}
+.toc-group.open > a.toc-h2::after { transform: rotate(90deg); }
+.toc-sub {
+  list-style: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .28s ease;
+}
+.toc-group.open > .toc-sub { max-height: 800px; }
+
+/* ── Main wrapper ── */
+main {
+  margin-left: var(--sidebar-w);
+  width: 100%;
+  max-width: calc(var(--sidebar-w) + var(--content-w) + 96px);
+  padding: 64px 48px 120px;
+}
+
+/* ── Section structure ── */
+.doc-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 36px 40px 40px;
+  margin-top: 32px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07);
+}
+.doc-section > h2 { margin-top: 0; }
+.subsection {
+  margin-top: 2.2em;
+  padding-top: 1.6em;
+  border-top: 1px solid var(--border-light);
+}
+.subsection:first-child { margin-top: 1.2em; border-top: none; padding-top: 0; }
+.subsection > h3 { margin-top: 0; border-bottom: none; padding-bottom: 0; }
+
+/* ── Headings ── */
+h1 {
+  font-size: 2.1em;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin-bottom: .6em;
+  padding-bottom: .5em;
+  border-bottom: 3px solid var(--black);
+}
+h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin-bottom: 1em;
+  padding-bottom: .4em;
+  border-bottom: 2px solid var(--black);
+}
+h3 {
+  font-size: 1.15em;
+  font-weight: 700;
+  margin-bottom: .5em;
+}
+h4 {
+  font-size: 1em;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: .4em;
+  color: var(--black);
+}
+
+/* ── Text ── */
+p { margin-top: .75em; }
+a { color: var(--black); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { opacity: .65; }
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .84em;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .1em .38em;
+  color: var(--black);
+}
+pre {
+  background: var(--code-block-bg);
+  color: var(--code-block-text);
+  border-radius: 10px;
+  padding: 18px 22px;
+  overflow-x: auto;
+  margin-top: 1em;
+  font-size: .84em;
+  line-height: 1.65;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
+}
+pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+
+/* ── Container box (segment structure visualization) ── */
+.cbox {
+  border: 2px solid var(--black);
+  border-radius: 8px;
+  padding: 22px 16px 14px;
+  margin: 14px 0;
+  position: relative;
+  background: #fff;
+}
+.cbox.exclude { border-color: var(--red); }
+.cbox.modifier { border-style: dashed; border-width: 1.5px; }
+.cbox-label {
+  position: absolute;
+  top: -11px;
+  left: 14px;
+  background: var(--black);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 3px;
+  letter-spacing: .04em;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  white-space: nowrap;
+}
+.cbox.exclude > .cbox-label { background: var(--red); }
+.cbox-body {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .88em;
+  line-height: 1.7;
+}
+.cbox-body > code,
+.cbox-row > code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  display: inline-block;
+}
+.cbox-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cbox-conn {
+  font-weight: 700;
+  margin: 10px 0;
+}
+.cbox-conn .cbox-mod {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-weight: 600;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+.cbox-comment {
+  font-style: italic;
+  font-size: .82em;
+  margin-left: 8px;
+}
+
+/* ── Time axis (After/Within window visualization) ── */
+.time-axis {
+  display: flex;
+  align-items: center;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 36px 24px 24px;
+  margin: 14px 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .82em;
+  position: relative;
+}
+.ta-pt {
+  background: var(--black);
+  color: #fff;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.ta-line {
+  flex: 1;
+  height: 2px;
+  background: var(--black);
+  position: relative;
+}
+.ta-line.dim { opacity: .3; }
+.ta-window {
+  flex: 2;
+  height: 30px;
+  border: 2px solid var(--black);
+  border-radius: 4px;
+  background: var(--hl-yes-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: .95em;
+  color: var(--black);
+  position: relative;
+}
+.ta-tick {
+  width: 2px;
+  height: 16px;
+  background: var(--black);
+  position: relative;
+  margin: 0 6px;
+  flex: 0 0 2px;
+}
+.ta-tick::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 1em;
+}
+.ta-tick::after {
+  content: '▼';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: .65em;
+  margin-bottom: -2px;
+  font-weight: 700;
+}
+.ta-arrow {
+  font-size: 1.6em;
+  margin-left: 4px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+/* ── Hit stream (timeline) visualization ── */
+.hitstream {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px 24px 28px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+.hs-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: .82em;
+  white-space: nowrap;
+  min-height: 36px;
+}
+.hs-row + .hs-row { margin-top: 30px; }
+.hs-label {
+  font-weight: 700;
+  min-width: 36px;
+  white-space: nowrap;
+}
+.hs-attr {
+  font-size: .9em;
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 400;
+}
+.hs-visit {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  position: relative;
+}
+.hs-hit {
+  background: #fff;
+  border: 2px solid var(--black);
+  border-radius: 999px;
+  padding: 4px 12px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+.hs-hit-event {
+  font-size: .78em;
+  opacity: .65;
+  font-style: italic;
+  margin-top: 1px;
+}
+.hs-visit .hs-hit + .hs-hit::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  width: 22px;
+  height: 2px;
+  background: var(--black);
+  margin-top: -1px;
+  z-index: 0;
+}
+.hs-row .hs-visit + .hs-visit::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 14px;
+  border-top: 2px dashed var(--black);
+  opacity: .4;
+}
+.hs-hit.returned { background: var(--hl-yes-bg); }
+.hs-hit.excluded { opacity: .3; }
+.hs-hit.match { border-color: var(--red); }
+.hs-visit[data-time]::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  font-size: 10.5px;
+  font-weight: 400;
+  opacity: .65;
+}
+.hs-caption {
+  font-size: .8em;
+  font-weight: 700;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+.hs-caption:first-child { margin-top: 0; }
+
+/* Interactive masking on bullet hover */
+.hitstream.masked .hs-hit { opacity: .15; transition: opacity .15s; }
+.hitstream.masked .hs-hit.hl-active { opacity: 1; }
+.hitstream .hs-hit { transition: opacity .15s, background .15s; }
+
+/* Extraction rows (graph → time → segment extraction) */
+.hitstream.has-extract .hs-row { margin-bottom: 26px; } /* room for visit-time ::after */
+.hitstream.has-extract .hs-label { min-width: 56px; } /* unify label width across graph & extract rows */
+
+/* Column headers (auto-injected by JS) — repeated above each visitor block */
+.hs-header {
+  display: flex;
+  gap: 20px;
+  font-size: .72em;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--black);
+  opacity: .55;
+  margin-bottom: 6px;
+}
+.hs-header-label { flex: 0 0 auto; min-width: 56px; }
+.hs-header-flow { flex: 1 1 auto; min-width: 0; }
+
+/* Divider between consecutive visitor blocks */
+.hitstream.has-extract .hs-extract-row + .hs-header {
+  margin-top: 32px;
+  padding-top: 26px;
+  border-top: 1px solid var(--border);
+}
+.hitstream.has-extract .hs-header + .hs-row { margin-top: 0; }
+.hs-extract-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .82em;
+  margin-top: 4px;
+}
+.hs-extract-row + .hs-extract-row { margin-top: 2px; }
+.hs-extract-row .hs-label { font-weight: 700; white-space: nowrap; }
+.hs-header-label { white-space: nowrap; }
+.hs-extract-visits {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.hs-extract-visit {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.hs-extract-cell {
+  text-align: center;
+  font-weight: 700;
+  color: var(--black);
+  opacity: .35;
+  transition: opacity .15s;
+}
+.hs-extract-cell.on { opacity: 1; }
+
+/* Bullet hover: focus on a specific extract row, dim others; also highlight matching hits in graph */
+.hitstream.focus .hs-extract-row { opacity: .3; transition: opacity .15s; }
+.hitstream.focus .hs-extract-row.hs-row-active { opacity: 1; }
+.hitstream.focus .hs-row .hs-hit[data-modes]:not(.hs-hit-active) { opacity: .25; }
+.hitstream.focus .hs-row .hs-hit.hs-hit-active { background: var(--hl-yes-bg); }
+
+/* Tabs */
+.hs-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 14px 0 0 0;
+  flex-wrap: wrap;
+}
+.hs-tab {
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .88em;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--black);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.hs-tab.active {
+  background: var(--black);
+  color: #fff;
+  border-color: var(--black);
+}
+.hs-tab:hover:not(.active) { background: var(--code-bg); }
+
+/* Legend inside hitstream */
+.hs-legend {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: .8em;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.hs-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.hs-swatch {
+  display: inline-block;
+  width: 16px; height: 14px;
+  border: 2px solid var(--black);
+  border-radius: 999px;
+  background: #fff;
+}
+.hs-swatch.sw-returned { background: var(--hl-yes-bg); }
+.hs-swatch.sw-excluded { background: #fff; opacity: .35; }
+.hs-swatch.sw-match { border-color: var(--red); }
+[data-target], [data-mode-target] {
+  cursor: help;
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-left: -4px;
+  transition: background .15s;
+}
+[data-target]:hover, [data-mode-target]:hover { background: rgba(0,0,0,.06); }
+
+/* Segment-definition tooltip */
+.hs-extract-row .hs-label { cursor: help; position: relative; }
+.hs-extract-row .hs-label:hover { background: rgba(0,0,0,.06); border-radius: 4px; }
+.tooltip-popup {
+  position: absolute;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid var(--black);
+  border-radius: 8px;
+  padding: 16px 22px 18px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  width: max-content;
+  min-width: 320px;
+  max-width: 720px;
+  pointer-events: none;
+  display: none;
+}
+.tooltip-popup .cbox { min-width: 280px; }
+.tooltip-popup .tooltip-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--black);
+  opacity: .55;
+  margin-bottom: 8px;
+}
+.tooltip-popup .cbox { margin-top: 14px; }
+.tooltip-popup .cbox:first-of-type { margin-top: 0; }
+
+/* ── Original table accordion ── */
+details.orig-table { margin-top: 12px; }
+details.orig-table > summary {
+  cursor: pointer;
+  font-size: .85em;
+  font-weight: 600;
+  padding: 8px 14px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  user-select: none;
+  list-style: none;
+}
+details.orig-table > summary::-webkit-details-marker { display: none; }
+details.orig-table > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform .2s;
+  font-size: .85em;
+}
+details.orig-table[open] > summary::before { transform: rotate(90deg); }
+details.orig-table > .table-wrap { margin-top: 8px; }
+
+/* ── Lists ── */
+ul, ol { padding-left: 1.6em; margin-top: .6em; }
+li { margin-top: .3em; }
+li + li { margin-top: .2em; }
+
+/* ── Tables ── */
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 1.1em;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+table { border-collapse: collapse; width: 100%; font-size: .875em; }
+th {
+  background: #f0ede8;
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+td {
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  vertical-align: middle;
+}
+tr:nth-child(even) td { background: #faf9f7; }
+
+/* Table cell highlights */
+td.cell-yes {
+  background: var(--hl-yes-bg) !important;
+  font-weight: 700;
+  text-align: center;
+}
+td.cell-no {
+  opacity: var(--hl-no-opacity);
+  text-align: center;
+}
+td.cell-ng { background: var(--hl-ng-bg) !important; color: var(--red); font-weight: 600; }
+td.cell-ok { background: var(--hl-ok-bg) !important; font-weight: 600; }
+
+/* ── Callout boxes ── */
+.callout {
+  border-left: 4px solid;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin-top: 1.2em;
+  font-size: .92em;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.callout.info { background: #f4f2ef; border-color: var(--black); }
+.callout.info .callout-title { color: var(--black); }
+.callout.warn { background: #fff4f4; border-color: var(--red); }
+.callout.warn .callout-title { color: var(--red); }
+
+/* ── Blockquote ── */
+blockquote {
+  border-left: 3px solid var(--black);
+  margin: 1em 0;
+  padding: 10px 18px;
+  color: var(--black);
+  font-size: .9em;
+  font-style: italic;
+  background: #f8f7f5;
+  border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  #toc { display: none; }
+  main { margin-left: 0; padding: 24px 20px 60px; }
+  .doc-section { padding: 24px 20px 28px; border-radius: 8px; }
+}
+
+/* ── Site footer (disclaimer) ── */
+.site-footer {
+  margin-top: 2.5em;
+  padding-top: 1.25em;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.82em;
+  line-height: 1.65;
+  color: #555;
+}
+.site-footer-title {
+  font-size: 0.95em;
+  font-weight: 700;
+  margin: 0 0 0.6em;
+  color: var(--black);
+}
+.site-footer p { margin: 0 0 0.65em; }
+.site-footer > p:last-of-type { margin-bottom: 0; }
+.site-footer .site-footer-en {
+  margin-top: 1.1em;
+  padding-top: 1em;
+  border-top: 1px solid var(--border-light);
+}
+.site-footer .site-footer-en p { margin: 0 0 0.65em; }
+.site-footer .site-footer-en p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<nav id="toc">
+  <div id="toc-heading">目次</div>
+  <ul id="toc-list"></ul>
+</nav>
+
+<main>
+
+<h1>Adobe Analytics セグメント：データ抽出装置として理解する</h1>
+
+<h2 id="about">このドキュメントについて</h2>
+<p>Adobe Analytics のセグメントを「データ抽出装置」として理解するための包括ガイドです。セグメントで条件を指定した時に「何が起こるか」を仕組みのレベルで解説し、条件の複合・除外・順次それぞれの挙動を自分で逆算できるようになることを目標とします。</p>
+<p>対象読者：AA の基本操作は知っているが、除外や順次の挙動で意図しない結果に直面したことがある実務者。</p>
+<div class="callout info">
+  <div class="callout-title">AA と CJA の用語対応・略式表示の規約</div>
+  <p>このドキュメントは AA の用語（訪問者・訪問・ヒット）で統一しています。CJA では人物（Person）・セッション（Session）・イベント（Event）に相当します。仕組みは同じです。</p>
+  <p><strong>略式表示について：</strong>本文では AA 用語で記述しますが、ID の略式表示は <strong>CJA の頭文字 E / S / P（event / session / person）</strong>を使用します。AA 用語では「visit」と「visitor」がいずれも v で始まるため区別できないことが理由です。具体的には、ヒット ID は E1・E2…、訪問 ID は S1・S2…、訪問者 ID は P1・P2… と表記します。</p>
+</div>
+
+<p>理解度の確認には <a href="AA_segment_quiz.html">AA_segment_quiz.html</a>（100 問のクイズ）を利用してください。</p>
+
+<hr>
+
+<h2 id="s1">1. AA のデータモデル：セグメントが操作する対象</h2>
+
+<h3 id="s1-1">1-1. 3 層の階層構造</h3>
+<p>AA のデータは以下の 3 層で管理される。</p>
+<pre><code>訪問者（Visitor）
+  └─ 訪問（Visit）
+       └─ ヒット（Hit）</code></pre>
+<div class="table-wrap"><table>
+<tr><th>レベル</th><th>意味</th><th>識別子</th></tr>
+<tr><td><strong>訪問者</strong></td><td>特定デバイスまたは人物のライフタイム全体</td><td>visitor ID</td></tr>
+<tr><td><strong>訪問</strong></td><td>一連の連続したセッション（30 分無操作で終了）</td><td>visit ID</td></tr>
+<tr><td><strong>ヒット</strong></td><td>個々のページビュー・リンククリック・カスタムイベント</td><td>hit ID</td></tr>
+</table></div>
+
+<h3 id="s1-2">1-2. 識別子の共有関係</h3>
+<p><strong>同一訪問に属するヒットは、同じ visit_id を共有する。同一訪問者に属する訪問・ヒットは、同じ visitor_id を共有する。</strong>共有関係は外側のコンテナを共有しているかで決まる。</p>
+<div class="cbox">
+  <span class="cbox-label">visitor_id = P1</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">visit_id = S1（1/1 10:00–10:12）</span>
+      <div class="cbox-body">
+        <code>E1: home</code> <code>E2: product</code> <code>E3: cart</code>
+      </div>
+    </div>
+    <div class="cbox">
+      <span class="cbox-label">visit_id = S2（1/3 14:00–14:08）</span>
+      <div class="cbox-body">
+        <code>E4: checkout</code> <code>E5: order</code>
+      </div>
+    </div>
+  </div>
+</div>
+<ul>
+<li>E1〜E3 は同じ visit_id（S1）を持つ → 同一訪問内のヒット</li>
+<li>E1〜E5 は同じ visitor_id（P1）を持つ → 同一訪問者のヒット（訪問は異なる）</li>
+<li>E4 と E5 は同じ visit_id（S2）を持つ → 別訪問だが同じ訪問者</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示</summary>
+  <div class="table-wrap"><table>
+  <tr><th>hit_id</th><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th></tr>
+  <tr><td>E1</td><td>1/1 10:00</td><td>home</td><td>S1</td><td>P1</td></tr>
+  <tr><td>E2</td><td>1/1 10:05</td><td>product</td><td>S1</td><td>P1</td></tr>
+  <tr><td>E3</td><td>1/1 10:12</td><td>cart</td><td>S1</td><td>P1</td></tr>
+  <tr><td>E4</td><td>1/3 14:00</td><td>checkout</td><td>S2</td><td>P1</td></tr>
+  <tr><td>E5</td><td>1/3 14:08</td><td>order</td><td>S2</td><td>P1</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s1-3">1-3. 「取得」とは何か</h3>
+<p>セグメントの「取得」とは、<strong>特定の識別子を持つ行を結果セットに含める操作</strong>である。セグメントが「一致した」と判定した場合、AA はその識別子（hit ID / visit ID / visitor ID）に等しい行をすべてレポートに返す。</p>
+
+<hr>
+
+<h2 id="s2">2. コンテナの本質：評価スコープと返却スコープの一体性</h2>
+
+<h3 id="s2-1">2-1. コンテナの 2 つの役割</h3>
+<p>コンテナは以下の 2 つの役割を同時に担う。</p>
+<div class="table-wrap"><table>
+<tr><th>役割</th><th>定義</th></tr>
+<tr><td><strong>評価スコープ</strong></td><td>条件をどの粒度で判定するか</td></tr>
+<tr><td><strong>返却スコープ</strong></td><td>条件が通った時、何を返すか</td></tr>
+</table></div>
+<p><strong>評価スコープと返却スコープは常に同じ（≡）である。</strong></p>
+
+<h3 id="s2-2">2-2. 3 コンテナの動作比較</h3>
+<div class="table-wrap"><table>
+<tr><th>コンテナ</th><th>評価の対象</th><th>条件が通った時に返すもの</th></tr>
+<tr><td>ヒット</td><td>個々のヒット 1 件ずつ</td><td>条件に一致した <strong>そのヒットのみ</strong></td></tr>
+<tr><td>訪問</td><td>訪問内の全ヒット群</td><td>条件が通った <strong>訪問の全ヒット</strong></td></tr>
+<tr><td>訪問者</td><td>訪問者の全ヒット群</td><td>条件が通った <strong>訪問者の全ヒット</strong></td></tr>
+</table></div>
+
+<h3 id="s2-3">2-3. 具体例：コンテナ別の返却範囲</h3>
+<p>同じ条件 <code>page=product</code> をコンテナの種類だけ変えて適用する 3 つのセグメントを比較する。</p>
+<div class="cbox" data-defines-segment="hit">
+  <span class="cbox-label">Hit</span>
+  <div class="cbox-body"><code>page=product</code></div>
+</div>
+<div class="cbox" data-defines-segment="visit">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body"><code>page=product</code></div>
+</div>
+<div class="cbox" data-defines-segment="visitor">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body"><code>page=product</code></div>
+</div>
+<div class="hitstream has-extract" data-segments="hit visit visitor">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ そのコンテナで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:12">
+      <span class="hs-hit" data-modes="visit visitor">home</span>
+      <span class="hs-hit match" data-modes="hit visit visitor">product</span>
+      <span class="hs-hit" data-modes="visit visitor">cart</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 14:00–14:08">
+      <span class="hs-hit" data-modes="visitor">checkout</span>
+      <span class="hs-hit" data-modes="visitor">order</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/2 09:00–09:10">
+      <span class="hs-hit" data-modes="visit visitor">home</span>
+      <span class="hs-hit match" data-modes="hit visit visitor">product</span>
+      <span class="hs-hit" data-modes="visit visitor">plp</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-mode-target="hit"><strong>ヒットコンテナ</strong>：条件に一致した 2 ヒットのみ</li>
+<li data-mode-target="visit"><strong>訪問コンテナ</strong>：product ヒットを含む訪問（S1/P1・S1/P2）の全ヒット。P1/S2 は product がないため除外</li>
+<li data-mode-target="visitor"><strong>訪問者コンテナ</strong>：product ヒットを含む訪問者の全ヒット。P1/S2 の checkout・order も返ってくる</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>Hit</th><th>Visit</th><th>Visitor</th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>S1</td><td>P1</td><td>-</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td><strong>product</strong></td><td>S1</td><td>P1</td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:12</td><td>cart</td><td>S1</td><td>P1</td><td>-</td><td>○</td><td>○</td></tr>
+  <tr><td>1/3 14:00</td><td>checkout</td><td>S2</td><td>P1</td><td>-</td><td>-</td><td>○</td></tr>
+  <tr><td>1/3 14:08</td><td>order</td><td>S2</td><td>P1</td><td>-</td><td>-</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>S1</td><td>P2</td><td>-</td><td>○</td><td>○</td></tr>
+  <tr><td>1/2 09:04</td><td><strong>product</strong></td><td>S1</td><td>P2</td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>1/2 09:10</td><td>plp</td><td>S1</td><td>P2</td><td>-</td><td>○</td><td>○</td></tr>
+  </table></div>
+</details>
+<div class="callout warn">
+  <div class="callout-title">訪問・訪問者コンテナの 1:N 返却</div>
+  <p>条件に一致したヒットだけでなく、そのスコープに属する <strong>すべてのヒット</strong> が返ってくる。</p>
+</div>
+
+<hr>
+
+<h2 id="s3">3. 複合条件の評価メカニズム：AND/OR とスコープの関係</h2>
+
+<h3 id="s3-1">3-1. 単一コンテナ内の AND/OR</h3>
+<p>AND・OR の評価はコンテナのスコープ内で行われる。</p>
+<p><strong>ヒットコンテナ内の AND：</strong></p>
+<div class="cbox" data-defines-segment="hit">
+  <span class="cbox-label">Hit</span>
+  <div class="cbox-body">
+    <div class="cbox-row"><code>page=home</code> <span style="font-weight:700;">AND</span> <code>page=product</code></div>
+  </div>
+</div>
+<p>1 つのヒットに page=home と page=product の両方が存在しなければならない。1 ヒットに page は 1 値しか持てないため、<strong>結果は常に 0 件</strong>。</p>
+<p><strong>訪問コンテナ内の AND：</strong></p>
+<div class="cbox" data-defines-segment="visit">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <div class="cbox-row"><code>page=home</code> <span style="font-weight:700;">AND</span> <code>page=product</code></div>
+  </div>
+</div>
+<p>同一訪問の中のどこかに page=home のヒットと page=product のヒットの両方が存在すること。別々のヒットに分かれていても OK。</p>
+<div class="hitstream has-extract" data-segments="hit visit">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ そのコンテナで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:05">
+      <span class="hs-hit match" data-modes="visit">home</span>
+      <span class="hs-hit match" data-modes="visit">product</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/2 09:00–09:10">
+      <span class="hs-hit match" data-modes="">home</span>
+      <span class="hs-hit" data-modes="">contact</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-mode-target="hit">Hit コンテナ：1 ヒットに page=home と page=product は共存できないため全 0 件</li>
+<li data-mode-target="visit">Visit コンテナ：S1 は home・product の両ヒットを持つ → S1 全ヒット返却。S2 は product なし → 除外</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th><code>[Hit]</code> home AND product</th><th><code>[Visit]</code> home AND product</th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>S1</td><td>P1</td><td>-</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td>product</td><td>S1</td><td>P1</td><td>-</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>S2</td><td>P2</td><td>-</td><td>-</td></tr>
+  <tr><td>1/2 09:10</td><td>contact</td><td>S2</td><td>P2</td><td>-</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s3-2">3-2. ネストしたコンテナの AND</h3>
+<p>子コンテナは「その条件が成立するスコープが存在するか」を <strong>真偽値として親に返す</strong>。</p>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>page=cart</code></div>
+    </div>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>page=checkout</code></div>
+    </div>
+  </div>
+</div>
+<ul>
+<li>「page=cart を含む訪問が存在するか」→ true/false</li>
+<li>「page=checkout を含む訪問が存在するか」→ true/false</li>
+<li>両方 true の訪問者の全データを返す</li>
+<li>cart 訪問と checkout 訪問は <strong>異なる訪問でも OK</strong></li>
+</ul>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:05">
+      <span class="hs-hit" data-modes="returned">home</span>
+      <span class="hs-hit match" data-modes="returned">cart</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 14:00–14:10">
+      <span class="hs-hit" data-modes="returned">product</span>
+      <span class="hs-hit match" data-modes="returned">checkout</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/2 09:00–09:08">
+      <span class="hs-hit" data-modes="">home</span>
+      <span class="hs-hit" data-modes="">cart</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：S1（home/cart）と S2（product/checkout）の 2 訪問が存在 → cart 訪問・checkout 訪問 → P1 全データ返却</li>
+<li data-target="P2">P2：S3 に cart はあるが checkout 訪問なし → <code>[Visit] page=checkout</code> が false → P2 は除外</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td>cart</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/3 14:00</td><td>product</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/3 14:10</td><td>checkout</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>S3</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/2 09:08</td><td>cart</td><td>S3</td><td>P2</td><td>-</td></tr>
+  </table></div>
+</details>
+<p>以下の 2 つは等価である：</p>
+<div class="cbox">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=home</code></div>
+    </div>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=product</code></div>
+    </div>
+  </div>
+</div>
+<div class="cbox">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <div class="cbox-row"><code>page=home</code> <span style="font-weight:700;">AND</span> <code>page=product</code></div>
+  </div>
+</div>
+
+<h3 id="s3-3">3-3. 異なるスコープを AND で組み合わせた場合</h3>
+<p>外側コンテナが全体の返却スコープを決める。内側の条件はその範囲内で真偽を返すだけである。AA の <code>Orders</code> は注文完了ページ（complete）のヒットでカウントされるものとする。</p>
+<div class="cbox">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <code>page=product</code>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox">
+      <span class="cbox-label">Visitor</span>
+      <div class="cbox-body"><code>Orders &gt; 0</code></div>
+    </div>
+  </div>
+</div>
+<p>返却スコープ：訪問（Visit コンテナが最外）<br>
+評価：この訪問に page=product があり、かつこの訪問者がライフタイムで Orders ＞ 0（過去に注文を完了している）</p>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-visit="S1" data-time="1/1 10:00–10:05">
+      <span class="hs-hit" data-modes="">home</span>
+      <span class="hs-hit match" data-modes="">product</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-visit="S2" data-time="1/2 09:00–09:10">
+      <span class="hs-hit" data-modes="returned">home</span>
+      <span class="hs-hit match" data-modes="returned">product</span>
+      <span class="hs-hit" data-modes="returned">cart</span>
+      <span class="hs-hit match" data-modes="returned">complete<span class="hs-hit-event">+ order</span></span>
+    </div>
+    <div class="hs-visit" data-visit="S3" data-time="1/3 14:00–14:05">
+      <span class="hs-hit" data-modes="">home</span>
+      <span class="hs-hit" data-modes="">contact</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="S1">S1（P1）：product ヒットあり、しかし P1 は注文経験なし（complete ヒットなし） → <code>[Visitor] Orders &gt; 0</code> 不成立 → 訪問ごと除外</li>
+<li data-target="S2">S2（P2）：product ヒットあり・complete で order が記録されているため Orders=1 → 両条件成立 → S2 の全ヒットを返却</li>
+<li data-target="S3">S3（P2）：訪問者として注文経験があっても、この訪問に product ヒットなし → <code>[Visit] page=product</code> 不成立 → 除外</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>event</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>-</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td><strong>product</strong></td><td>-</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>-</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/2 09:04</td><td><strong>product</strong></td><td>-</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/2 09:08</td><td>cart</td><td>-</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/2 09:10</td><td><strong>complete</strong></td><td>order</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 14:00</td><td>home</td><td>-</td><td>S3</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/3 14:05</td><td>contact</td><td>-</td><td>S3</td><td>P2</td><td>-</td></tr>
+  </table></div>
+</details>
+<div class="callout warn">
+  <div class="callout-title">返却スコープは Visit のまま</div>
+  <p>P2 は Orders &gt; 0 を満たすが、返却されるのは P2 の全データではなく <strong>条件を満たした訪問（S2）のデータのみ</strong>。返却スコープは最外コンテナ（Visit）が決める。</p>
+</div>
+
+<p><strong>逆の入れ子構造：外側が小・内側が大のケース</strong></p>
+<p>コンテナは Visitor → Visit → Hit の順（外が大・内が小）に限らない。逆順——外側が Hit・内側が Visitor——でも設定できる。原則は変わらない：<strong>外側コンテナが返却スコープを決め、内側コンテナは条件の真偽を返す。</strong>以下 2 つのセグメントを比較する。</p>
+<div class="cbox" data-defines-segment="hit_unit">
+  <span class="cbox-label">Hit</span>
+  <div class="cbox-body">
+    <code>page=cart</code>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox">
+      <span class="cbox-label">Visitor</span>
+      <div class="cbox-body"><code>Orders &gt; 0</code></div>
+    </div>
+  </div>
+</div>
+<div class="cbox" data-defines-segment="visitor_whole">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <code>page=cart</code>
+    <div class="cbox-conn">AND</div>
+    <code>Orders &gt; 0</code>
+  </div>
+</div>
+<p>「ヒット単位」は最外が Hit のため返却もヒット単位、「訪問者全体」は最外が Visitor のため訪問者の全データが返却される。</p>
+<div class="hitstream has-extract" data-segments="hit_unit visitor_whole" data-labels="ヒット単位|訪問者全体">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ そのセグメントで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:10">
+      <span class="hs-hit" data-modes="">home</span>
+      <span class="hs-hit" data-modes="">cart</span>
+      <span class="hs-hit" data-modes="">product</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/2 09:00–09:10">
+      <span class="hs-hit" data-modes="visitor_whole">home</span>
+      <span class="hs-hit match" data-modes="hit_unit visitor_whole">cart</span>
+      <span class="hs-hit match" data-modes="visitor_whole">complete<span class="hs-hit-event">+ order</span></span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：注文経験なし（complete なし）→ <code>[Visitor] Orders &gt; 0</code> 不成立 → 両パターンとも全行 -</li>
+<li data-mode-target="hit_unit">P2 / ヒット単位：cart ヒットのみ返却。home・complete は page≠cart のため -</li>
+<li data-mode-target="visitor_whole">P2 / 訪問者全体：cart あり・complete で order 記録あり → Visitor 条件成立 → home・cart・complete すべて返却</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>event</th><th>visit_id</th><th>visitor_id</th><th>返却: ヒット単位</th><th>返却: 訪問者全体</th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>-</td><td>S1</td><td>P1</td><td>-</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td>cart</td><td>-</td><td>S1</td><td>P1</td><td>-</td><td>-</td></tr>
+  <tr><td>1/1 10:10</td><td>product</td><td>-</td><td>S1</td><td>P1</td><td>-</td><td>-</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>-</td><td>S2</td><td>P2</td><td>-</td><td>○</td></tr>
+  <tr><td>1/2 09:05</td><td><strong>cart</strong></td><td>-</td><td>S2</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/2 09:10</td><td><strong>complete</strong></td><td>order</td><td>S2</td><td>P2</td><td>-</td><td>○</td></tr>
+  </table></div>
+</details>
+<div class="callout info">
+  <div class="callout-title">逆の入れ子の使いどころ</div>
+  <p>「訪問者属性で絞り込みたいが、返却は特定ヒットだけにしたい」場面で有効。外側を Visitor にすると対象訪問者の全データが返ってくるが、外側を Hit にすれば条件を満たすヒットだけに絞れる。</p>
+</div>
+
+<hr>
+
+<h2 id="s4">4. 否定条件の意味：単純な「存在しない」ではなく「それ以外のヒットが存在する」</h2>
+<p>否定条件（<code>!=</code>・<code>does not contain</code>・<code>does not exist</code> 等）はコンテナのスコープ内で <strong>条件を満たすヒットが存在するか</strong> として評価される。AND/OR と同じ評価モデルが適用されるため、直感と外れた結果になりやすい。</p>
+<div class="cbox">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body"><code>page != plp</code></div>
+</div>
+<p>これは「この訪問の中に page が plp でないヒットが存在するか」を評価する。home・product・cart など plp 以外のページを 1 件でも含む訪問なら true になる。</p>
+<div class="table-wrap"><table>
+<tr><th>ストリーム</th><th><code>[Visit] page != plp</code></th><th>意図と一致するか</th></tr>
+<tr><td>home → product → cart</td><td>成立（home など plp 以外のヒットあり）</td><td>〇</td></tr>
+<tr><td>home → plp → product</td><td>成立（home が plp 以外のヒットとして存在）</td><td>× 意図は「plp なし」なのに通過する</td></tr>
+<tr><td>plp のみ</td><td>不成立（すべてのヒットが plp）</td><td>〇</td></tr>
+</table></div>
+<p>plp のみの訪問は除外されるが、plp と他ページが混在する訪問は通過してしまう。</p>
+<p><strong>スコープ別の動作比較：</strong></p>
+<div class="table-wrap"><table>
+<tr><th>条件</th><th>評価の意味</th></tr>
+<tr><td><code>[Hit] page != plp</code></td><td>そのヒットが plp でないか（直感と一致する）</td></tr>
+<tr><td><code>[Visit] page != plp</code></td><td>訪問内に「plp でないヒット」が <strong>存在するか</strong>（他のページが 1 件でもあれば true）</td></tr>
+<tr><td><code>[Visitor] page != plp</code></td><td>訪問者のヒット全体に「plp でないヒット」が <strong>存在するか</strong>（同上）</td></tr>
+</table></div>
+<p>ヒットコンテナでは否定条件が直感通り機能する。訪問・訪問者コンテナで「この訪問に plp が一切ない」を表現したい場合は否定条件では届かず、Exclude コンテナが必要になる（5 節で詳説）。</p>
+
+<hr>
+
+<h2 id="s5">5. 除外コンテナのメカニズム</h2>
+
+<h3 id="s5-1">5-1. 除外コンテナの本質</h3>
+<p>除外コンテナは「行を物理的に削除する」のではなく、<strong>スコープ単位で否定条件を返す</strong> 仕組みである。</p>
+<div class="table-wrap"><table>
+<tr><th>除外コンテナ</th><th>否定の単位</th><th>意味</th></tr>
+<tr><td>Exclude Hit</td><td>ヒット</td><td>このヒットが条件を満たす → <strong>このヒットを除外する</strong></td></tr>
+<tr><td>Exclude Visit</td><td>訪問</td><td>この訪問が条件を満たす → <strong>この訪問を除外する</strong></td></tr>
+<tr><td>Exclude Visitor</td><td>訪問者</td><td>この訪問者が条件を満たす → <strong>この訪問者を除外する</strong></td></tr>
+</table></div>
+
+<h3 id="s5-2">5-2. スコープ一致が正しい除外の鍵</h3>
+<p>「plp を含まない訪問を取得したい」という要件に対して、3 通りのアプローチを比較する。</p>
+<p><strong>パターン A：否定条件</strong></p>
+<div class="cbox" data-defines-segment="ab">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <code>page=home</code>
+    <div class="cbox-conn">AND</div>
+    <code>page != plp</code>
+  </div>
+</div>
+<p>評価：訪問内に「page=home かつ page≠plp のヒット」が存在するか。page=home のヒットは常に page≠plp なので、<strong>実質的に <code>[Visit] page=home</code> と等価</strong>。<br>
+→ plp あり の訪問も通過 ×</p>
+<p><strong>パターン B：Exclude Hit（スコープミスマッチ）</strong></p>
+<div class="cbox" data-defines-segment="ab">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <code>page=home</code>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=plp</code></div>
+    </div>
+  </div>
+</div>
+<p>評価：Exclude Hit は各ヒットを個別に評価し、page=plp のヒットを除外（false）、それ以外を通過（true）とする。AND はヒットレベルで結合されるため「page=home かつ <code>[Exclude Hit]</code> を通過したヒット」を探す。page=home のヒットは plp ではないので <code>[Exclude Hit]</code> を必ず通過する。<br>
+→ こちらも<strong>実質的に <code>[Visit] page=home</code> と等価</strong>。plp あり の訪問も通過 ×</p>
+<p><strong>パターン C：Exclude Visit（正しい）</strong></p>
+<div class="cbox" data-defines-segment="c">
+  <span class="cbox-label">Visit</span>
+  <div class="cbox-body">
+    <code>page=home</code>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Visit</span>
+      <div class="cbox-body"><code>page=plp</code></div>
+    </div>
+  </div>
+</div>
+<p>評価フロー：</p>
+<ol>
+<li>この訪問に page=home のヒットが存在するか → true/false</li>
+<li>この訪問に page=plp のヒットが存在するか → true ならば <strong>訪問全体を除外</strong>（Exclude Visit）</li>
+<li>両条件が成立する訪問のみを返す</li>
+</ol>
+<p>→ home あり・plp なし の訪問のみ返る 〇</p>
+<div class="hitstream has-extract" data-segments="ab c" data-labels="パターン A・B|パターン C">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ そのパターンで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-visit="S1" data-time="1/1 10:00–10:05">
+      <span class="hs-hit match" data-modes="ab c">home</span>
+      <span class="hs-hit" data-modes="ab c">product</span>
+    </div>
+    <div class="hs-visit" data-visit="S2" data-time="1/2 09:00–09:10">
+      <span class="hs-hit match" data-modes="ab">home</span>
+      <span class="hs-hit match" data-modes="ab">plp</span>
+      <span class="hs-hit" data-modes="ab">product</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-visit="S3" data-time="1/3 11:00–11:08">
+      <span class="hs-hit match" data-modes="ab c">home</span>
+      <span class="hs-hit" data-modes="ab c">contact</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="S1 S3">S1・S3（plp なし）：A・B・C すべて条件成立 → 全ヒット返却</li>
+<li data-target="S2">S2（plp あり）：A・B は visit が通過 → <strong>plp ヒット自体も含む</strong> S2 全ヒット返却 × / C は訪問全体を除外 → すべて - 〇</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>A: <code>page!=plp</code></th><th>B: <code>[Excl.Hit]plp</code></th><th>C: <code>[Excl.Visit]plp</code></th></tr>
+  <tr><td>1/1 10:00</td><td>home</td><td>S1</td><td>P1</td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td>product</td><td>S1</td><td>P1</td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>home</td><td>S2</td><td>P1</td><td>○</td><td>○</td><td>-</td></tr>
+  <tr><td>1/2 09:05</td><td>plp</td><td>S2</td><td>P1</td><td>○</td><td>○</td><td>-</td></tr>
+  <tr><td>1/2 09:10</td><td>product</td><td>S2</td><td>P1</td><td>○</td><td>○</td><td>-</td></tr>
+  <tr><td>1/3 11:00</td><td>home</td><td>S3</td><td>P2</td><td>○</td><td>○</td><td>○</td></tr>
+  <tr><td>1/3 11:08</td><td>contact</td><td>S3</td><td>P2</td><td>○</td><td>○</td><td>○</td></tr>
+  </table></div>
+</details>
+<p><strong>3 パターンの違いまとめ：</strong></p>
+<div class="table-wrap"><table>
+<tr><th>パターン</th><th>評価の単位</th><th>「plp なし」を表現できるか</th><th>等価な意味</th></tr>
+<tr><td>否定条件 <code>page != plp</code></td><td>ヒット</td><td>×</td><td>「plp でないヒットが存在する訪問」</td></tr>
+<tr><td><code>[Exclude Hit] page=plp</code></td><td>ヒット</td><td>×</td><td>plp ヒットを除外するが AND がヒットレベルで結合 → 「page=home のヒットがある訪問」</td></tr>
+<tr><td><code>[Exclude Visit] page=plp</code></td><td>訪問</td><td>〇</td><td>「plp ヒットを含む訪問全体を除外した訪問」</td></tr>
+</table></div>
+<div class="callout warn">
+  <div class="callout-title">スコープミスマッチの原則</div>
+  <p>否定条件と Exclude Hit はどちらもヒットレベルで評価される。<strong>訪問・訪問者スコープで「この条件を含まない」を表現するには、スコープが一致した Exclude コンテナが必要。</strong></p>
+</div>
+
+<h3 id="s5-3">5-3. よくある誤りと正解パターン</h3>
+<div class="table-wrap"><table>
+<tr><th>やりたいこと</th><th>誤ったセグメント</th><th>正しいセグメント</th></tr>
+<tr><td>home あり、plp なし の訪問</td><td><code>[Visit] &gt; home AND [Excl.Hit] &gt; plp</code></td><td><code>[Visit] &gt; home AND [Excl.Visit] &gt; plp</code></td></tr>
+<tr><td>購入した訪問者から購入訪問を除いたデータ</td><td><code>[Visitor] &gt; [Excl.Hit] &gt; order</code></td><td><code>[Visitor] &gt; [Visit] &gt; exists AND [Excl.Visit] &gt; order</code></td></tr>
+<tr><td>特定ヒットを含む訪問全体を除外したデータ</td><td><code>[Visit] &gt; [Excl.Hit] &gt; error_page</code></td><td><code>[Excl.Visit] &gt; error_page</code>（トップレベル）</td></tr>
+</table></div>
+
+<hr>
+
+<h2 id="s6">6. 順次セグメントのメカニズム</h2>
+<p>順次セグメントは <strong>時系列の関係性</strong>（A の後に B、A から N 時間以内に B など）を扱う仕組み。以下の構成要素から成る：</p>
+<ul>
+<li><strong>コンテナスコープ</strong>：順次セグメントも通常のコンテナと同じく <strong>Visit</strong> スコープか <strong>Visitor</strong> スコープを選べる。
+  <ul>
+    <li><strong>Visit スコープ</strong>：シーケンスは 1 訪問内で完結する必要がある（A と B が同じ訪問内に存在するか）</li>
+    <li><strong>Visitor スコープ</strong>：複数訪問にまたがってシーケンスを評価できる（A と B が異なる訪問でも可）</li>
+  </ul>
+</li>
+<li><strong>THEN 演算子</strong>（6-1）：チェックポイント間の順序を定義</li>
+<li><strong>After / Within 制約</strong>（6-2〜6-4）：チェックポイント間の時間窓を定義</li>
+<li><strong>返却モード</strong>：シーケンス成立後にどこまでのデータを返すかを 3 つから選択
+  <ul>
+    <li><strong>Include Everyone</strong>（デフォルト）：シーケンスを qualifying 条件として使い、条件を満たした訪問者/訪問の <strong>全データ</strong> を返す</li>
+    <li><strong>Only After Sequence</strong>（6-5）：シーケンスを構成する <strong>最後の INCLUDE チェックポイント以降</strong> のデータのみを返す</li>
+    <li><strong>Only Before Sequence</strong>（6-6）：シーケンスを構成する <strong>最初の INCLUDE チェックポイントまで</strong>（その INCLUDE 自体を含む）のデータを返す</li>
+    <li>Only After と Only Before の <strong>併用</strong>（コンテナ AND 結合による区間抽出）は 6-7 で扱う</li>
+  </ul>
+</li>
+<li><strong>EXCLUDE チェックポイント</strong>（section 7）：シーケンス内に「不在の証明」や「収集範囲の境界」を組み込む。位置別の役割と Only After/Before との組み合わせまで section 7 で扱う</li>
+</ul>
+<div class="callout info">
+  <div class="callout-title">前提</div>
+  <p>本節 6-1〜6-4 の例示はすべて <strong>Include Everyone</strong>（デフォルトモード）を前提とする。Only After / Only Before の挙動は 6-5・6-6 で扱う。スコープは Visit／Visitor のどちらかを使い分けるが、本節の例示は基本的に Visitor スコープ（複数訪問にまたがる例を示すため）を使用する。</p>
+</div>
+
+<h3 id="s6-0">6-0. 順次セグメントの 5 原則（Adobe 公式）</h3>
+<p>Adobe Customer Success Webinar で示された、順次セグメント全体を貫く 5 つの原則。section 6・7 のすべての挙動はこの原則から導かれる。</p>
+<blockquote>
+<ol>
+<li>"All the Include conditions in the THEN definition must be encountered, in order, to begin matching."</li>
+<li>"Matching continues until and unless an Exclude condition is triggered, when it then stops."</li>
+<li>"If the Include sequence is observed multiple times in the container scope, each of those sequences will independently evaluate and add to the data returned."</li>
+<li>"Add WITHIN / AFTER conditions to force the proximity you require. (This is often needed)."</li>
+<li>"Validate every time you try something new. You will mistakenly assume the nature of your data or your sequential filter definition, at some time."</li>
+</ol>
+<p>— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<div class="table-wrap"><table>
+<tr><th>原則</th><th>本書での対応</th></tr>
+<tr><td><strong>1.</strong> INCLUDE は <strong>順序通り</strong>すべて出現してはじめてマッチ開始</td><td>6-1（THEN 演算子のスキャンモデル）</td></tr>
+<tr><td><strong>2.</strong> マッチは EXCLUDE が触発されるまで継続し、触発時に停止</td><td>section 7（特に 7-4・7-5 の範囲終端）</td></tr>
+<tr><td><strong>3.</strong> 同じ INCLUDE シーケンスが複数回出現すれば <strong>それぞれ独立に評価され、返却データに加算される</strong>（greedy）</td><td>6-5・6-6 の greedy デモ</td></tr>
+<tr><td><strong>4.</strong> 必要な近接性（時間距離）は <strong>WITHIN / AFTER</strong> で明示的に指定する</td><td>6-2・6-3・6-4</td></tr>
+<tr><td><strong>5.</strong> 新しい定義を試すたびに <strong>必ず検証</strong> する。データや定義について必ずどこかで思い込みが発生する</td><td>section 8 の読解手順、複合設計の検証習慣</td></tr>
+</table></div>
+<div class="callout warn">
+  <div class="callout-title">原則 3（greedy）の含意</div>
+  <p>1 訪問者の中で同じシーケンスが複数回成立すれば、それぞれの成立点から個別に Only After/Before の収集が走り、結果として <strong>複数の区間データが連結されて返却</strong> される。これは 6-5・6-6 の greedy ケースで明示的に示している。</p>
+</div>
+<div class="callout warn">
+  <div class="callout-title">原則 5（検証）の重要性</div>
+  <p>順次セグメントは構文の見た目から推測した挙動と実際の挙動が乖離しやすい。EXCLUDE の位置・モードの組み合わせ・コンテナスコープのいずれを変えても結果が大きく変わる（section 7 のまとめ表参照）。<strong>本書の hitstream 例示と同じ要領で、自分のデータでも必ず一致／不一致パターンを検証してから本番運用に入ること。</strong></p>
+</div>
+
+<h3 id="s6-1">6-1. THEN 演算子：スキャンモデルの基本</h3>
+<p>順次セグメントは hit ストリームを <strong>時系列順にスキャン</strong> するモデルで動作する。</p>
+<p>動作原理：</p>
+<ol>
+<li>ヒットストリームを先頭からスキャンし、チェックポイント A に一致するヒットを探す</li>
+<li>A が見つかった地点を「通過点」として記録する</li>
+<li>通過点以降のストリームを再スキャンしてチェックポイント B を探す</li>
+<li>B が見つかればシーケンス成立。見つからなければ次の A 候補から繰り返す</li>
+</ol>
+<p><strong>greedy（欲張り）な動作：</strong> シーケンスが複数の方法で成立する場合、AA は <strong>最大データ量を返す組み合わせ</strong> を選ぶ。</p>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="A → B">
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="B → A（順序不適合）">
+      <span class="hs-hit match" data-modes="">B</span>
+      <span class="hs-hit match" data-modes="">A</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P3</span>
+    <div class="hs-visit" data-time="A → C → B（C は無視）">
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit" data-modes="returned">C</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P4</span>
+    <div class="hs-visit" data-time="A → B → A → B（greedy で最初の A から成立）">
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">A</span>
+      <span class="hs-hit" data-modes="returned">B</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：A の後に B → 成立、訪問者の全データ返却</li>
+<li data-target="P2">P2：B の後に A はあるが、A の後に B がない → 不成立</li>
+<li data-target="P3">P3：A の後に B あり（C は無視される）→ 成立</li>
+<li data-target="P4">P4：A → B → A → B、最初の A→B で成立。greedy で最大データを返す</li>
+</ul>
+
+<h3 id="s6-2">6-2. After 制約：スキャン開始位置の遅延</h3>
+<blockquote><p>The After operator is used to specify a minimum limit on the amount of time between two checkpoints. When setting the After values, the time limit begins when the segment is applied. For example, if the After operator is set on a container to identify visitors who visit page A, but don't return to visit page B until after one day, then that day will start when the visitor leaves page A.<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=The%20After%20operator%20is%20used%20to%20specify%20a%20minimum%20limit%20on%20the%20amount%20of%20time%20between%20two%20checkpoints">Sequential segments</a>)</p></blockquote>
+<p><strong>意味：</strong> A の通過点（A を離れた時点）から、After 値が経過するまで B を探し始めない。</p>
+<div class="table-wrap"><table>
+<tr><th>単位</th><th>意味</th></tr>
+<tr><td>時間（秒・分・時・日・週）</td><td>A を離れた時刻から X 時間以上経過後に B を探す</td></tr>
+<tr><td>Hit(s)</td><td>A 以降 X ヒット以上経過後に B を探す</td></tr>
+<tr><td>Visit(s)</td><td>A 以降 X 訪問以上経過後に B を探す</td></tr>
+</table></div>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN <span class="cbox-mod">[After 1 Day]</span></div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<p>A を閲覧してから 24 時間以内に発生した B は対象外。24 時間経過後に B を閲覧したユーザーのみが対象。</p>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/1 15:00（5h 後）">
+      <span class="hs-hit match" data-modes="">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="returned">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 11:00–11:10（2d 後）">
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">other</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：A (1/1 10:00) → B (同日 15:00)、5時間後 → After 1 Day 未満 → 不一致 → 全行 -</li>
+<li data-target="P2">P2：A (1/1 10:00) → B (1/3 11:00)、49時間後 → After 1 Day 以上 → 一致 → P2 全データ返却</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>A THEN [After 1 Day] B</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 15:00</td><td>B</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 11:00</td><td>B</td><td>S3</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 11:10</td><td>other</td><td>S3</td><td>P2</td><td>○</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s6-3">6-3. Within 制約：スキャン窓の上限設定</h3>
+<blockquote><p>The Within operator is used to specify a maximum limit on the amount of time between two checkpoints. (...) that day begins when the visitor leaves page A. To be included in the segment, opening page B must occur within a maximum of 1440 minutes (one day) after leaving page A to view page B.<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=The%20Within%20operator%20is%20used%20to%20specify%20a%20maximum%20limit%20on%20the%20amount%20of%20time%20between%20two%20checkpoints">Sequential segments</a>)</p></blockquote>
+<p><strong>意味：</strong> A の通過点（A を離れた時点）から、Within 値の範囲内に B が見つからなければ不成立。</p>
+<div class="table-wrap"><table>
+<tr><th>単位</th><th>意味</th></tr>
+<tr><td>時間（秒・分・時・日・週）</td><td>A を離れた時刻から X 時間以内に B が現れること</td></tr>
+<tr><td>Hit(s)</td><td>A 以降 X ヒット以内に B が現れること</td></tr>
+<tr><td>Visit(s)</td><td>A 以降 X 訪問以内に B が現れること</td></tr>
+</table></div>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN <span class="cbox-mod">[Within 1 Day]</span></div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<p>A から 1 日以内に B が出現した場合のみ成立。</p>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="returned">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/1 20:00（10h 後）">
+      <span class="hs-hit match" data-modes="returned">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 09:00">
+      <span class="hs-hit match" data-modes="">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 15:00（1d 後）">
+      <span class="hs-hit match" data-modes="">B</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：A (1/1 10:00) → B (1/1 20:00)、10時間後 → Within 1 Day 内 → 一致 → P1 全データ返却</li>
+<li data-target="P2">P2：A (1/1 09:00) → B (1/3 15:00)、30時間後 → Within 1 Day 超過 → 不一致 → -</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>A THEN [Within 1 Day] B</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 20:00</td><td>B</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 09:00</td><td>A</td><td>S2</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/3 15:00</td><td>B</td><td>S3</td><td>P2</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s6-4">6-4. After と Within の組み合わせ：スキャン窓の定義</h3>
+<blockquote><p>After but Within: When using both the After and Within operators, both operators start and end in parallel, not sequentially. (...) Both conditions are enforced from the time of the first page view.<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=both%20operators%20start%20and%20end%20in%20parallel%2C%20not%20sequentially">Sequential segments</a>)</p></blockquote>
+<p>After と Within を同時に設定すると、<strong>両制約が同じ基点（A の通過点）から同時に適用される。</strong></p>
+<div class="time-axis">
+  <span class="ta-pt">A</span>
+  <div class="ta-line dim"></div>
+  <div class="ta-tick" data-label="ここから（After 経過点）"></div>
+  <div class="ta-window">B を探す窓 [After ≤ X ≤ Within]</div>
+  <div class="ta-tick" data-label="ここまで（Within 上限）"></div>
+  <div class="ta-line dim"></div>
+  <span class="ta-arrow">→</span>
+</div>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN <span class="cbox-mod">[After 1 Day, Within 30 Days]</span></div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<p>A の 1 日後〜30 日以内に B が出現した場合のみ成立。</p>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/1 14:00（4h 後）">
+      <span class="hs-hit match" data-modes="">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="returned">A</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 11:00–11:10（2d 後）">
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">other</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P3</span>
+    <div class="hs-visit" data-time="1/1 10:00">
+      <span class="hs-hit match" data-modes="">A</span>
+    </div>
+    <div class="hs-visit" data-time="2/15 11:00（45d 後）">
+      <span class="hs-hit match" data-modes="">B</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：A → B が 4 時間後 → After 1 Day 未満（窓に入る前）→ 不一致</li>
+<li data-target="P2">P2：A → B が 49 時間後 → After 1 Day 以上・Within 30 Days 以内 → 一致 → P2 全データ返却</li>
+<li data-target="P3">P3：A → B が 45 日後 → Within 30 Days 超過（窓を抜けた後）→ 不一致</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>A THEN [After 1 Day, Within 30 Days] B</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 14:00</td><td>B</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S2</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 11:00</td><td>B</td><td>S3</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 11:10</td><td>other</td><td>S3</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S4</td><td>P3</td><td>-</td></tr>
+  <tr><td>2/15 11:00</td><td>B</td><td>S5</td><td>P3</td><td>-</td></tr>
+  </table></div>
+</details>
+<p><strong>After / Within の単位による窓の違い：</strong></p>
+<div class="table-wrap"><table>
+<tr><th>After</th><th>Within</th><th>B を探す窓</th></tr>
+<tr><td>1 Day</td><td>30 Days</td><td>A から 1 日後〜30 日以内</td></tr>
+<tr><td>1 Hit</td><td>5 Hits</td><td>A から 1 ヒット後〜5 ヒット以内</td></tr>
+<tr><td>なし</td><td>7 Days</td><td>A の直後〜7 日以内（下限なし）</td></tr>
+<tr><td>1 Day</td><td>なし</td><td>A から 1 日後以降（上限なし）</td></tr>
+</table></div>
+
+<h3 id="s6-5">6-5. Only After Sequence：最後の INCLUDE 以降を返す</h3>
+<blockquote><p>"As soon as all those THEN checkpoints that are includes, not excludes, are met, then it starts to match the data."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop#:~:text=as%20soon%20as%20all%20those%20then%20checkpoints%20that%20are%20includes%20not%20excludes%20are%20met%20then%20it%20starts%20to%20match%20the%20data">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<p><strong>データ収集の開始点 = シーケンス内の最後の INCLUDE チェックポイントに一致したヒット</strong>。シーケンスが「成立した」と判定された時点（＝最後の INCLUDE が満たされた時点）から、そのヒット以降のデータが返却される。</p>
+<ul>
+<li>EXCLUDE チェックポイントは収集開始点の判定に使われない</li>
+<li>シーケンスが複数回成立する場合：greedy の原則により、最大データを返す成立が採用される</li>
+</ul>
+<div class="cbox modifier" data-defines-segment="all only_after">
+  <span class="cbox-label">Visitor / Only After Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code> <span class="cbox-comment"># 最後の INCLUDE → 収集開始点</span></div>
+    </div>
+  </div>
+</div>
+<p>シーケンスが成立した時点で、最後の INCLUDE である B 以降のデータが返却される。Include Everyone と比べて返却範囲が「前から」絞られる：</p>
+<div class="hitstream has-extract" data-segments="all only_after" data-labels="Include Everyone|Only After">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ そのモードで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:05">
+      <span class="hs-hit match" data-modes="all">A</span>
+      <span class="hs-hit" data-modes="all">C</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 14:00–14:10">
+      <span class="hs-hit match" data-modes="all only_after">B</span>
+      <span class="hs-hit" data-modes="all only_after">D</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:25">
+      <span class="hs-hit match" data-modes="all">A</span>
+      <span class="hs-hit match" data-modes="all only_after">B</span>
+      <span class="hs-hit" data-modes="all only_after">X</span>
+      <span class="hs-hit match" data-modes="all only_after">A</span>
+      <span class="hs-hit match" data-modes="all only_after">B</span>
+      <span class="hs-hit" data-modes="all only_after">post</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-mode-target="all">Include Everyone：シーケンス成立 → 訪問者の <strong>全データ</strong> を返す（A・C を含む）</li>
+<li data-mode-target="only_after">Only After Sequence：最後の INCLUDE（B）以降のデータのみ返す。B 以前の A・C は含まれない</li>
+<li data-target="P2">P2（greedy のデモ）：A→B のシーケンスが 2 回成立可能。greedy の原則により <strong>最初の A→B</strong> が採用され、最初の B が収集開始点となる</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>Include Everyone</th><th>Only After Sequence</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>○</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td>C</td><td>S1</td><td>P1</td><td>○</td><td>-</td></tr>
+  <tr><td>1/3 14:00</td><td>B</td><td>S2</td><td>P1</td><td>○</td><td>○</td></tr>
+  <tr><td>1/3 14:10</td><td>D</td><td>S2</td><td>P1</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S3</td><td>P2</td><td>○</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td>B</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:10</td><td>X</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:15</td><td>A</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:20</td><td>B</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:25</td><td>post</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s6-6">6-6. Only Before Sequence：最初の INCLUDE 以前を返す</h3>
+<blockquote><p>"With Only Before, it can help to think of it going in reverse order, so going back in time."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop#:~:text=with%20only%20before%20it%20can%20help%20to%20think%20of%20it%20going%20in%20reverse%20order">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<p>Only After の鏡像（対称的な構造）。時系列を遡るようにイメージすると理解しやすい。</p>
+<p><strong>データ収集の終了点 = シーケンス内の最初の INCLUDE チェックポイントに一致したヒット</strong>。最初の INCLUDE のヒットを含み、それより前のデータが返却される（Only After が最後の INCLUDE を含むのと対称）。</p>
+<ul>
+<li>収集されるのは最初の INCLUDE までのデータ（その INCLUDE 自体を含む）</li>
+</ul>
+<div class="cbox modifier" data-defines-segment="all only_before">
+  <span class="cbox-label">Visitor / Only Before Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code> <span class="cbox-comment"># 最初の INCLUDE → 収集終了点</span></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<p>最初の INCLUDE である A のヒット以前のデータが返却される。Include Everyone と比べて返却範囲が「後ろから」絞られる：</p>
+<div class="hitstream has-extract" data-segments="all only_before" data-labels="Include Everyone|Only Before">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ そのモードで返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 09:00–09:25">
+      <span class="hs-hit" data-modes="all only_before">pre</span>
+      <span class="hs-hit match" data-modes="all only_before">A</span>
+      <span class="hs-hit" data-modes="all">C</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 14:00–14:10">
+      <span class="hs-hit match" data-modes="all">B</span>
+      <span class="hs-hit" data-modes="all">post</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 09:00–09:25">
+      <span class="hs-hit" data-modes="all only_before">pre1</span>
+      <span class="hs-hit match" data-modes="all only_before">A</span>
+      <span class="hs-hit" data-modes="all only_before">pre2</span>
+      <span class="hs-hit match" data-modes="all only_before">A</span>
+      <span class="hs-hit match" data-modes="all">B</span>
+      <span class="hs-hit" data-modes="all">post</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-mode-target="all">Include Everyone：シーケンス成立 → 訪問者の <strong>全データ</strong> を返す</li>
+<li data-mode-target="only_before">Only Before Sequence：最初の INCLUDE（A）までのデータを返す。A 自体は含み、A 以降の C・B・post は含まれない</li>
+<li data-target="P2">P2（greedy のデモ）：A→B のシーケンスが 2 回成立可能。greedy の原則により <strong>最後の A→B</strong> が採用され、2 つ目の A が収集終了点となる。終了点（2 つ目の A）も Only Before に含まれるため、最初の A・pre1・pre2 と合わせて返却される</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>Include Everyone</th><th>Only Before Sequence</th></tr>
+  <tr><td>1/1 09:00</td><td>pre</td><td>S1</td><td>P1</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td>C</td><td>S1</td><td>P1</td><td>○</td><td>-</td></tr>
+  <tr><td>1/3 14:00</td><td>B</td><td>S2</td><td>P1</td><td>○</td><td>-</td></tr>
+  <tr><td>1/3 14:10</td><td>post</td><td>S2</td><td>P1</td><td>○</td><td>-</td></tr>
+  <tr><td>1/1 09:00</td><td>pre1</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 09:05</td><td>A</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 09:10</td><td>pre2</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 09:15</td><td>A</td><td>S3</td><td>P2</td><td>○</td><td>○</td></tr>
+  <tr><td>1/1 09:20</td><td>B</td><td>S3</td><td>P2</td><td>○</td><td>-</td></tr>
+  <tr><td>1/1 09:25</td><td>post</td><td>S3</td><td>P2</td><td>○</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s6-7">6-7. Only After と Only Before の併用：区間抽出</h3>
+<p>Only After Sequence と Only Before Sequence は、Visitor コンテナの中で <strong>2 つの順次サブグループとして AND 結合</strong> することで併用できる。両者の返却範囲の共通部分が返却され、<strong>2 つのイベント間のデータ区間を切り出す</strong> ことができる。</p>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox modifier">
+      <span class="cbox-label">Visitor / Only After Sequence</span>
+      <div class="cbox-body">
+        <div class="cbox"><span class="cbox-label">Hit</span><div class="cbox-body"><code>page=A</code></div></div>
+        <div class="cbox-conn">THEN</div>
+        <div class="cbox"><span class="cbox-label">Hit</span><div class="cbox-body"><code>page=B</code> <span class="cbox-comment"># 開始点</span></div></div>
+      </div>
+    </div>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox modifier">
+      <span class="cbox-label">Visitor / Only Before Sequence</span>
+      <div class="cbox-body">
+        <div class="cbox"><span class="cbox-label">Hit</span><div class="cbox-body"><code>page=C</code> <span class="cbox-comment"># 終了点</span></div></div>
+        <div class="cbox-conn">THEN</div>
+        <div class="cbox"><span class="cbox-label">Hit</span><div class="cbox-body"><code>page=D</code></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p>Only After A→B は「B 以降」を、Only Before C→D は「C 以前」を返す。AND の共通部分は <strong>B から C までの区間</strong>（B・C 自身も含む）。</p>
+<div class="time-axis">
+  <div class="ta-line dim"></div>
+  <div class="ta-tick" data-label="B（Only After 開始点）"></div>
+  <div class="ta-window">データ収集区間（B〜C）</div>
+  <div class="ta-tick" data-label="C（Only Before 終了点）"></div>
+  <div class="ta-line dim"></div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:25">
+      <span class="hs-hit" data-modes="">pre</span>
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit" data-modes="">X</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">Y</span>
+      <span class="hs-hit" data-modes="returned">Z</span>
+      <span class="hs-hit match" data-modes="returned">C</span>
+      <span class="hs-hit" data-modes="">Q</span>
+      <span class="hs-hit match" data-modes="">D</span>
+      <span class="hs-hit" data-modes="">post</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:20">
+      <span class="hs-hit" data-modes="">pre</span>
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit" data-modes="">X</span>
+      <span class="hs-hit match" data-modes="">B</span>
+      <span class="hs-hit" data-modes="">Y</span>
+      <span class="hs-hit" data-modes="">Z</span>
+      <span class="hs-hit" data-modes="">post</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P3</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:20">
+      <span class="hs-hit" data-modes="">pre</span>
+      <span class="hs-hit" data-modes="">X</span>
+      <span class="hs-hit" data-modes="">Y</span>
+      <span class="hs-hit" data-modes="">Z</span>
+      <span class="hs-hit match" data-modes="">C</span>
+      <span class="hs-hit" data-modes="">Q</span>
+      <span class="hs-hit match" data-modes="">D</span>
+      <span class="hs-hit" data-modes="">post</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P4</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:25">
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit match" data-modes="returned">C</span>
+      <span class="hs-hit match" data-modes="returned">D</span>
+      <span class="hs-hit match" data-modes="returned">C</span>
+      <span class="hs-hit match" data-modes="">D</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1（両シーケンス成立）：A→B・C→D ともに成立 → Only After 開始点 ＝ B、Only Before 終了点 ＝ C → AND 共通部分 <strong>B〜C 区間</strong>（B・Y・Z・C）が返却される</li>
+<li data-target="P2">P2（C→D 不在）：A→B は成立するが C→D が存在しない → Only Before 側が不成立 → セグメントが訪問者にマッチしない → <strong>全データ返却なし</strong></li>
+<li data-target="P3">P3（A→B 不在）：C→D は成立するが A→B が存在しない → Only After 側が不成立 → セグメントが訪問者にマッチしない → <strong>全データ返却なし</strong></li>
+<li data-target="P4">P4（greedy）：A→B が 2 通り、C→D が 2 通り成立可能。greedy により Only After は <strong>最初の A→B</strong>（最初の B が開始点）、Only Before は <strong>最後の C→D</strong>（最後の C が終了点）を採用 → 最大窓 <strong>最初の B〜最後の C</strong> が返却される</li>
+</ul>
+<div class="callout info">
+  <div class="callout-title">活用例</div>
+  <p>「ログイン後（Only After <code>page=login THEN page=home</code>）から、購入完了前（Only Before <code>page=cart THEN event=order_confirm</code>）までのブラウジング行動」など、<strong>特定のイベント区間のみのデータ</strong> を分析したい場面で有効。</p>
+</div>
+
+<hr>
+
+<h2 id="s7">7. 順次セグメント + 除外チェックポイント</h2>
+<p>順次セグメントの中に EXCLUDE チェックポイントを置くと、シーケンスに「不在の証明」や「収集範囲の境界」を組み込める。<strong>EXCLUDE の位置（最初・途中・最後）によって役割が根本的に異なる</strong>。Only After / Only Before モード（6-5, 6-6）と組み合わせると、収集の起点と終端の両方を絞り込むことができる。</p>
+
+<h3 id="s7-1">7-1. 最初が EXCLUDE：(EXCLUDE A) THEN B</h3>
+<blockquote><p>"Identify visitors who visited one page without ever going to another page. For example, people that checked out a purchase without ever visited the home page."<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=Identify%20visitors%20who%20visited%20one%20page%20without%20ever%20going%20to%20another%20page">Sequential segments</a>)</p></blockquote>
+<blockquote><p>"give me the people who interacted with email but not with web before email"<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/mastering-sequential-logic#:~:text=give%20me%20the%20people%20who%20interacted%20with%20email%20but%20not%20with%20web%20before%20email">Mastering Sequential Logic</a>)</p></blockquote>
+<p><strong>意味（Include Everyone 既定モード）：</strong>「B に到達した時点で、それより前に A が存在しないこと」</p>
+<p>EXCLUDE は <strong>qualifying 条件（不在の証明）</strong> として機能する。A が B より前に存在する訪問者は <strong>セグメントに不一致</strong> となり、何も返却されない。Only After Sequence の収集開始点の判定にも使われない。</p>
+<div class="callout info">
+  <div class="callout-title">モードによる挙動の違い</div>
+  <p>同じ位置の EXCLUDE でも、<strong>Only Before モードと組み合わせると後方終端として機能する</strong>（C で打ち切られるが、シーケンス自体は成立し A と C の間のデータが返却される）。詳しくは 7-5 を参照。</p>
+</div>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="A → B（B より前に A あり → 不一致）">
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit match" data-modes="">B</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="C → B（B より前に A なし → 一致）">
+      <span class="hs-hit" data-modes="returned">C</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+    </div>
+  </div>
+</div>
+
+<h3 id="s7-2">7-2. 途中が EXCLUDE：A THEN (EXCLUDE B) THEN C</h3>
+<blockquote><p>"Identify visitors who visited one page, did not visit another page, then visited yet another page."<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=Identify%20visitors%20who%20visited%20one%20page%2C%20did%20not%20visit%20another%20page%2C%20then%20visited%20yet%20another%20page">Sequential segments</a>)</p></blockquote>
+<blockquote><p>"give me the people who saw web and then mobile apps but not if they had email in between"<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/mastering-sequential-logic#:~:text=give%20me%20the%20people%20who%20saw%20web%20and%20then%20mobile%20apps%20but%20not%20if%20they%20had%20email%20in%20between">Mastering Sequential Logic</a>)</p></blockquote>
+<p><strong>意味：</strong>「A の後 C に到達したが、A と C の間に B が出現しなかった」</p>
+<p>EXCLUDE は <strong>qualifying 条件（区間内の不在）</strong> として機能する。</p>
+<div class="callout info">
+  <div class="callout-title">参考</div>
+  <p><a href="https://experienceleague.adobe.com/en/docs/events/the-skill-exchange-recordings/analytics/may2022/tips-and-tricks">Excluding between checkpoints（Tips &amp; Tricks）</a></p>
+</div>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=C</code></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="A → X → C（A と C の間に B なし → 一致）">
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit" data-modes="returned">X</span>
+      <span class="hs-hit match" data-modes="returned">C</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="A → B → C（A と C の間に B あり → 不一致）">
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit match" data-modes="">B</span>
+      <span class="hs-hit match" data-modes="">C</span>
+    </div>
+  </div>
+</div>
+
+<h3 id="s7-3">7-3. 最後が EXCLUDE：A THEN B THEN (EXCLUDE C)</h3>
+<p><strong>意味（Include Everyone 既定モード）：</strong>「A の後 B に到達した訪問者のうち、その後 C が出現していないケースが対象」</p>
+<p>EXCLUDE は <strong>qualifying 条件（不在の証明）</strong> として機能する。B 以降に C が存在する訪問者は <strong>セグメントに不一致</strong> となり、何も返却されない。</p>
+<div class="callout info">
+  <div class="callout-title">モードによる挙動の違い</div>
+  <p>同じ位置の EXCLUDE でも、<strong>Only After モードと組み合わせると前方終端として機能する</strong>（C で打ち切られるが、シーケンス自体は成立し B から C の間のデータが返却される）。詳しくは 7-4 を参照。</p>
+</div>
+<blockquote><p>"...let me study the people who touched web but never touched email afterward."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop#:~:text=let%20me%20study%20the%20people%20who%20touched%20web%20but%20never%20touched%20email%20afterward">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<blockquote><p>"Identify visitors who visited one page but never visited other pages. For example, visitors that visited your home page but never any of your checkout pages."<br>
+— Adobe Analytics Documentation (<a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build#:~:text=Identify%20visitors%20who%20visited%20one%20page%20but%20never%20visited%20other%20pages">Sequential segments</a>)</p></blockquote>
+<blockquote><p>"give me the people who saw web with no email afterward"<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/mastering-sequential-logic#:~:text=give%20me%20the%20people%20who%20saw%20web%20with%20no%20email%20afterward">Mastering Sequential Logic</a>)</p></blockquote>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=C</code></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="A → B → X → Y（C 出現せず → 末尾まで収集）">
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">X</span>
+      <span class="hs-hit" data-modes="returned">Y</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="A → B → X → C（B 以降に C 出現 → 不一致）">
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit match" data-modes="">B</span>
+      <span class="hs-hit" data-modes="">X</span>
+      <span class="hs-hit match" data-modes="">C</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：A→B 成立、その後 C なし → EXCLUDE 条件クリア → セグメント一致 → 全データ返却</li>
+<li data-target="P2">P2：A→B 成立、しかし B 以降に C 出現 → EXCLUDE 違反 → セグメント不一致 → 返却なし</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:05</td><td>B</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:10</td><td>X</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:15</td><td>Y</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S2</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td>B</td><td>S2</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/1 10:10</td><td>X</td><td>S2</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/1 10:15</td><td>C</td><td>S2</td><td>P2</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s7-4">7-4. Only After + 終端 EXCLUDE：起点と終端で範囲を絞る</h3>
+<p>Only After/Before の方向性で「進行方向」を決め、EXCLUDE がその進行方向の終端を切る、という関係になる。両者を組み合わせると、シーケンスの起点と終端の両方を絞り込んだ <strong>区間データの抽出</strong> が可能。</p>
+<blockquote><p>"It's going to continue in the direction you selected based on Only After or Only Before until it may see the exclude checkpoint condition triggered."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop#:~:text=it%E2%80%99s%20going%20to%20continue%20in%20the%20direction%20you%20selected%20based%20on%20only%20after%20only%20before%20until%20it%20may%20see%20the%20exclude%20checkpoint%20condition%20triggered">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<div class="table-wrap"><table>
+<tr><th>構成</th><th>EXCLUDE の役割</th></tr>
+<tr><td>Only After + 最後の EXCLUDE</td><td>データ収集の <strong>前方終端</strong>（C が現れたら収集終了）</td></tr>
+<tr><td>Only Before + 最初の EXCLUDE</td><td>データ収集の <strong>後方終端</strong>（逆方向で C が現れたら収集終了）</td></tr>
+</table></div>
+<p>以下、Only After + 終端 EXCLUDE の例を示す。シーケンスの最後の INCLUDE 以降のデータを集めつつ、特定イベント（EXCLUDE 対象）が現れた時点で収集を打ち切る。</p>
+<div class="cbox modifier">
+  <span class="cbox-label">Visitor / Only After Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=B</code> <span class="cbox-comment"># 最後の INCLUDE → 収集開始点</span></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=C</code> <span class="cbox-comment"># 終端（C で収集終了）</span></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-visit="S1" data-time="1/1 10:00–10:08">
+      <span class="hs-hit match" data-modes="">A</span>
+      <span class="hs-hit" data-modes="">X</span>
+    </div>
+    <div class="hs-visit" data-visit="S2" data-time="1/2 09:00–09:10">
+      <span class="hs-hit match" data-modes="returned">B</span>
+      <span class="hs-hit" data-modes="returned">Y</span>
+    </div>
+    <div class="hs-visit" data-visit="S3" data-time="1/3 14:00–14:20">
+      <span class="hs-hit" data-modes="returned">Z</span>
+      <span class="hs-hit match" data-modes="">C</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="S1">A → B のシーケンス成立。Only After 収集開始点 ＝ B → B 以前の A・X は除外</li>
+<li data-target="S2 S3">B 以降（Y・Z）は収集。C に達した時点で収集終了（C 自体は除外）</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>A</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:08</td><td>X</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/2 09:00</td><td>B</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:10</td><td>Y</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/3 14:00</td><td>Z</td><td>S3</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/3 14:20</td><td>C</td><td>S3</td><td>P1</td><td>-</td></tr>
+  </table></div>
+</details>
+
+
+<h3 id="s7-5">7-5. Only Before + 起点 EXCLUDE：起点と終端で範囲を絞る</h3>
+<blockquote><p>"...going back in time if we saw app and then before that I saw web, we start matching that data and we'll get to see everything from that web point prior until they hit email."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop#:~:text=going%20back%20in%20time%20if%20we%20saw%20app%20and%20then%20before%20that%20I%20saw%20web">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<blockquote><p>"The subset(s) of a Person's data, prior to a matched sequence of Web then App, but not beyond (earlier than) an Email touch. ... It is a series of events ending with the inclusive sequence, going back until any exclude checkpoint is observed."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<p>Only After + 終端 EXCLUDE の <strong>鏡像</strong>。Only Before モードでは、最初の EXCLUDE が <strong>qualifying ではなく後方終端</strong> として振る舞う：シーケンスは「A が存在する」という条件で成立し、Only Before の終了点（A）から時系列を遡って収集を続け、特定イベント（C）に到達した時点で打ち切る。</p>
+<div class="callout info">
+  <div class="callout-title">7-1 との違い</div>
+  <p>同じ <code>(EXCLUDE C) THEN A</code> でも、<strong>Include Everyone モード（7-1）では C が存在すると不一致でデータなし</strong>、<strong>Only Before モード（7-5）では C は終端として機能し、C と A の間のデータが返却される</strong>。Only After/Before モードは EXCLUDE を「収集範囲を絞る境界」として再解釈する。</p>
+</div>
+<div class="cbox modifier">
+  <span class="cbox-label">Visitor / Only Before Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=C</code> <span class="cbox-comment"># 後方終端（C より前は除外）</span></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>page=A</code> <span class="cbox-comment"># 最初の INCLUDE → 収集終了点</span></div>
+    </div>
+  </div>
+</div>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-visit="S1" data-time="1/1 10:00–10:20">
+      <span class="hs-hit" data-modes="">pre</span>
+      <span class="hs-hit match" data-modes="">C</span>
+      <span class="hs-hit" data-modes="returned">X</span>
+      <span class="hs-hit" data-modes="returned">Y</span>
+    </div>
+    <div class="hs-visit" data-visit="S2" data-time="1/2 09:00–09:10">
+      <span class="hs-hit" data-modes="returned">Z</span>
+      <span class="hs-hit match" data-modes="returned">A</span>
+      <span class="hs-hit" data-modes="">post</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="S1">S1：pre は C より前にあるため後方終端で除外、C 自身も EXCLUDE で除外、X・Y は C と A の間にあるため収集対象</li>
+<li data-target="S2">S2：Z は A より前（収集範囲内）で収集対象、A 自身は最初の INCLUDE であり境界として収集対象、post は A 以降のため対象外</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>pre</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:05</td><td>C</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:10</td><td>X</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:15</td><td>Y</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>Z</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:05</td><td>A</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:10</td><td>post</td><td>S2</td><td>P1</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s7-6">7-6. 実用例：申し込み後の「直後 1 セッション」を取得する</h3>
+<p>App 申し込みイベントが発生した訪問の <strong>直後の 1 セッションのみ</strong> を抽出するセグメント。Only After で「申し込みイベント以降」を指定し、終端 EXCLUDE で「次の訪問が始まったら収集終了」を表現。</p>
+<div class="cbox modifier">
+  <span class="cbox-label">Visitor / Only After Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>App submit event</code> <span class="cbox-comment"># 申し込みが起こった訪問</span></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>Day exists</code> <span class="cbox-comment"># 起点（この訪問の開始ヒット以降）</span></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Visit</span>
+      <div class="cbox-body"><code>Day exists</code> <span class="cbox-comment"># 終端（次の訪問が始まったら収集終了）</span></div>
+    </div>
+  </div>
+</div>
+<p>この構成で「申し込み後の最初の 1 セッション」に限定されたデータを返す。</p>
+
+<h3 id="s7-7">7-7. EXCLUDE の位置と役割（まとめ）</h3>
+<div class="table-wrap"><table>
+<tr><th>位置</th><th>構成例</th><th>Include Everyone（既定）</th><th>Only After モード</th><th>Only Before モード</th></tr>
+<tr><td><strong>最初</strong></td><td>(EXCLUDE A) THEN B</td><td>qualifying（B より前に A が存在しない）</td><td>不明（明確な情報源なし）</td><td><strong>後方終端</strong>（B から遡り、A 直前で打ち切り）</td></tr>
+<tr><td><strong>途中</strong></td><td>A THEN (EXCLUDE B) THEN C</td><td>qualifying（A と C の間に B が存在しない）</td><td>不明（明確な情報源なし）</td><td>不明（明確な情報源なし）</td></tr>
+<tr><td><strong>最後</strong></td><td>A THEN B THEN (EXCLUDE C)</td><td>qualifying（B 以降に C が存在しない）</td><td><strong>前方終端</strong>（B 起点で C 直前まで）</td><td>不明（明確な情報源なし）</td></tr>
+</table></div>
+<div class="callout warn">
+  <div class="callout-title">重要：モードによる EXCLUDE の意味の切り替わり</div>
+  <p>Include Everyone モードでは <strong>すべての位置の EXCLUDE が qualifying</strong>（条件違反すれば不一致で返却なし）として機能する。Only After / Only Before モードと組み合わせると、<strong>収集の進行方向にある EXCLUDE が範囲終端として再解釈される</strong>（条件違反でもセグメントは成立し、終端で収集を打ち切る）。Only After + 終端 EXCLUDE（7-4）と Only Before + 起点 EXCLUDE（7-5）が公式 Webinar で言及されている代表的な使い方。<strong>「不明」と記したセルは現時点で明確な情報源を確認できなかった組み合わせ</strong>であり、実装の挙動は実データで検証すること。</p>
+</div>
+
+<h4 id="s7-7-min">おまけ：最小構成（INCLUDE 1 個 + EXCLUDE 1 個）</h4>
+<p>THEN 演算子は最小 2 個のチェックポイントから利用でき、片方を EXCLUDE に設定してもよい。<code>A THEN (EXCLUDE C)</code> や <code>(EXCLUDE C) THEN A</code> のような <strong>INCLUDE 1 個 + EXCLUDE 1 個</strong> も有効な順次セグメント定義となり、「シーケンス」は単一チェックポイントでもよい。</p>
+<blockquote><p>"Only two checkpoints are needed to use THEN, even if one is configured to EXCLUDE."<br>
+"The inclusive sequence is simply 'Web', which starts to match a series of consecutive events going forward in time. If it finds Email, it stops matching."<br>
+"At a minimum, every Person's Web hits will be retrieved here."<br>
+— Adobe Customer Success Webinar (<a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop">Mastering Sequential Logic: Starts and Stops</a>)</p></blockquote>
+<p>挙動はモードと配置の組み合わせで上のまとめ表通りに分かれる。例えば <code>A THEN (EXCLUDE C)</code> を Only After モードで使えば 7-4 の縮約版（A から C 直前まで収集）、<code>(EXCLUDE C) THEN A</code> を Only Before モードで使えば 7-5 の縮約版（A から遡り C 直前まで収集）として動作する。</p>
+<div class="callout info">
+  <div class="callout-title">最低保証ライン（"At a minimum..."）</div>
+  <p>Only After + 終端 EXCLUDE / Only Before + 起点 EXCLUDE のいずれでも、INCLUDE が出現していれば <strong>最低でもそのチェックポイント自身は必ず返却される</strong>。EXCLUDE による打ち切りが発生しなくてもデータ末尾（または先頭）まで収集が続くため、INCLUDE が成立している限り空集合にはならない。</p>
+</div>
+
+<hr>
+
+<h2 id="s8">8. 複合設計の読み方</h2>
+
+<h3 id="s8-1">8-1. セグメントを「読む」処理手順</h3>
+<p>複雑なセグメントに直面した時は、以下の手順で評価を追う。</p>
+<ol>
+<li><strong>最外コンテナのスコープを確認する</strong>（= 返却スコープ）</li>
+<li><strong>子コンテナ・条件を内側から外側に向けて評価する</strong></li>
+<li><strong>除外コンテナが見つかったら、そのスコープで否定を適用する</strong></li>
+<li><strong>順次条件が含まれる場合、スキャンモデルで通過点を特定する</strong></li>
+<li><strong>Only After/Before が指定されていれば、起点/終点でデータを切り出す</strong></li>
+</ol>
+
+<h3 id="s8-2">8-2. 読み解き例</h3>
+<p><strong>例 1（複合除外）：</strong></p>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>page=product</code></div>
+    </div>
+    <div class="cbox-conn">AND</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Visit</span>
+      <div class="cbox-body"><code>event=purchase</code></div>
+    </div>
+  </div>
+</div>
+<ul>
+<li>返却スコープ：訪問者（Visitor コンテナ）</li>
+<li>条件 1：product ページを含む訪問が存在する（Visit コンテナ → 真偽値）</li>
+<li>条件 2：purchase イベントを含む訪問が存在しない（Exclude Visit → 訪問単位で否定 → 真偽値）</li>
+<li>結果：product を見たが購入はしていない訪問者の全データ 〇</li>
+</ul>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>条件一致ヒット</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:08">
+      <span class="hs-hit match" data-modes="">product</span>
+      <span class="hs-hit" data-modes="">cart</span>
+    </div>
+    <div class="hs-visit" data-time="1/2 09:00">
+      <span class="hs-hit match" data-modes="">checkout / purchase</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 11:00–11:10">
+      <span class="hs-hit match" data-modes="returned">product</span>
+      <span class="hs-hit" data-modes="returned">cart</span>
+    </div>
+    <div class="hs-visit" data-time="1/3 14:00">
+      <span class="hs-hit" data-modes="returned">info</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：product 訪問あり（S1）、しかし purchase 訪問も存在（S2）→ Exclude Visit 発動 → P1 全体除外</li>
+<li data-target="P2">P2：product 訪問あり（S3）、purchase 訪問なし → 条件成立 → P2 全データ返却</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>event</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>product</td><td>-</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:08</td><td>cart</td><td>-</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/2 09:00</td><td>checkout</td><td>purchase</td><td>S2</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 11:00</td><td>product</td><td>-</td><td>S3</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/1 11:10</td><td>cart</td><td>-</td><td>S3</td><td>P2</td><td>○</td></tr>
+  <tr><td>1/3 14:00</td><td>info</td><td>-</td><td>S4</td><td>P2</td><td>○</td></tr>
+  </table></div>
+</details>
+
+<p><strong>例 2（順次 + 時間制約）：</strong></p>
+<div class="cbox">
+  <span class="cbox-label">Visitor</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>page=product</code></div>
+    </div>
+    <div class="cbox-conn">THEN <span class="cbox-mod">[After 1 Day, Within 30 Days]</span></div>
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>event=purchase</code></div>
+    </div>
+  </div>
+</div>
+<ul>
+<li>返却スコープ：訪問者</li>
+<li>シーケンス：product ページ閲覧訪問の後、1 日後〜30 日以内に purchase イベント訪問</li>
+<li>時間制約の基点：product 閲覧訪問の終了時点（A を離れた時点）</li>
+<li>結果：product 閲覧から 1 日後〜30 日以内に購入した訪問者の全データ</li>
+</ul>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:08">
+      <span class="hs-hit match" data-modes="returned">product</span>
+      <span class="hs-hit" data-modes="returned">cart</span>
+    </div>
+    <div class="hs-visit" data-time="1/2 11:00（1d 後）">
+      <span class="hs-hit match" data-modes="returned">checkout / purchase</span>
+    </div>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P2</span>
+    <div class="hs-visit" data-time="1/1 09:00">
+      <span class="hs-hit match" data-modes="">product</span>
+    </div>
+    <div class="hs-visit" data-time="1/1 14:00（5h 後）">
+      <span class="hs-hit match" data-modes="">checkout / purchase</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="P1">P1：product 訪問（1/1 10:00）→ purchase 訪問（1/2 11:00）、25時間後 → After 1 Day 以上・Within 30 Days 以内 → 一致 → P1 全データ返却</li>
+<li data-target="P2">P2：product 訪問（1/1 09:00）→ purchase 訪問（同日 14:00）、5時間後 → After 1 Day 未満 → 不一致 → -</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>event</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>product</td><td>-</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:08</td><td>cart</td><td>-</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 11:00</td><td>checkout</td><td>purchase</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 09:00</td><td>product</td><td>-</td><td>S3</td><td>P2</td><td>-</td></tr>
+  <tr><td>1/1 14:00</td><td>checkout</td><td>purchase</td><td>S3</td><td>P2</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<p><strong>例 3（Only After + 終端 EXCLUDE）：</strong></p>
+<div class="cbox modifier">
+  <span class="cbox-label">Visitor / Only After Sequence</span>
+  <div class="cbox-body">
+    <div class="cbox">
+      <span class="cbox-label">Visit</span>
+      <div class="cbox-body"><code>page=checkout</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox">
+      <span class="cbox-label">Hit</span>
+      <div class="cbox-body"><code>event=order_confirm</code></div>
+    </div>
+    <div class="cbox-conn">THEN</div>
+    <div class="cbox exclude">
+      <span class="cbox-label">Exclude Hit</span>
+      <div class="cbox-body"><code>page=homepage</code></div>
+    </div>
+  </div>
+</div>
+<ul>
+<li>Only After 起点：order_confirm ヒット（最後の INCLUDE）以降</li>
+<li>終端：homepage ヒットが出現した時点で収集終了</li>
+<li>結果：購入完了後から次にホームを訪問するまでの行動データ</li>
+</ul>
+<div class="hitstream has-extract" data-segments="returned">
+  <div class="hs-legend">
+    <span><span class="hs-swatch sw-match"></span>シーケンスのチェックポイント</span>
+    <span>○ ＝ 返却される</span>
+  </div>
+  <div class="hs-row">
+    <span class="hs-label">P1</span>
+    <div class="hs-visit" data-time="1/1 10:00–10:12">
+      <span class="hs-hit match" data-modes="">checkout</span>
+      <span class="hs-hit match" data-modes="returned">order_confirm</span>
+      <span class="hs-hit" data-modes="returned">thankyou</span>
+    </div>
+    <div class="hs-visit" data-time="1/2 09:00–09:08">
+      <span class="hs-hit" data-modes="returned">product</span>
+      <span class="hs-hit match" data-modes="">homepage</span>
+    </div>
+  </div>
+</div>
+<ul>
+<li data-target="checkout">checkout ヒットは order_confirm（起点）より前 → Only After により除外</li>
+<li data-target="order_confirm thankyou product">order_confirm・thankyou・product は起点以降かつ homepage 前 → 収集</li>
+<li data-target="homepage">homepage は Exclude Hit → 収集終了（homepage 自体は除外）</li>
+</ul>
+<details class="orig-table">
+  <summary>訪問データをテーブルレイアウトで表示（○ = 返却、- = 返却されない）</summary>
+  <div class="table-wrap"><table>
+  <tr><th>dateTime</th><th>page</th><th>event</th><th>visit_id</th><th>visitor_id</th><th>返却</th></tr>
+  <tr><td>1/1 10:00</td><td>checkout</td><td>-</td><td>S1</td><td>P1</td><td>-</td></tr>
+  <tr><td>1/1 10:10</td><td>-</td><td>order_confirm</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/1 10:12</td><td>thankyou</td><td>-</td><td>S1</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:00</td><td>product</td><td>-</td><td>S2</td><td>P1</td><td>○</td></tr>
+  <tr><td>1/2 09:08</td><td>homepage</td><td>-</td><td>S2</td><td>P1</td><td>-</td></tr>
+  </table></div>
+</details>
+
+<h3 id="s8-3">8-3. 設計時のチェックリスト</h3>
+<p><strong>除外を設計する時：</strong></p>
+<ul>
+<li>「何を除外したいか」の粒度は？ヒット・訪問・訪問者のいずれか？</li>
+<li>Exclude コンテナのレベルはその粒度と一致しているか？</li>
+<li>Exclude Hit を訪問コンテナの AND に入れていないか？（スコープミスマッチに注意）</li>
+</ul>
+<p><strong>順次を設計する時：</strong></p>
+<ul>
+<li>greedy の影響で意図しない早期マッチが起きないか？</li>
+<li>After/Within の基点は「A を離れた時点」であることを確認しているか？</li>
+<li>EXCLUDE の位置は最初・途中・最後のどこか？それぞれの役割を把握しているか？</li>
+</ul>
+<p><strong>Only After/Before を設計する時：</strong></p>
+<ul>
+<li>起点/終点は何のヒットに相当するか？</li>
+<li>データ収集を途中で止めたい場合、終端 EXCLUDE を設定しているか？</li>
+<li>複数回シーケンスが成立する場合、greedy でどの成立が選ばれるか確認しているか？</li>
+</ul>
+
+<hr>
+
+<h2 id="s9">9. 参考ドキュメント</h2>
+<ul>
+  <li><a href="https://experienceleague.adobe.com/en/docs/analytics/components/segmentation/segmentation-workflow/seg-sequential-build">Sequential segments（AA）</a></li>
+  <li><a href="https://experienceleague.adobe.com/en/docs/analytics-platform/using/cja-components/segments/seg-sequential-build">Sequential segments（CJA）</a></li>
+  <li><a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/sequential-logic-start-stop">Mastering Sequential Logic: Starts and Stops（ウェビナー）</a></li>
+  <li><a href="https://experienceleague.adobe.com/en/docs/events/adobe-customer-success-webinar-recordings/2025/multisolution2025/mastering-sequential-logic">Mastering Sequential Logic: A Visual Framework（ウェビナー）</a></li>
+  <li><a href="https://experienceleague.adobe.com/en/docs/events/the-skill-exchange-recordings/analytics/may2022/tips-and-tricks">Excluding between checkpoints（Tips &amp; Tricks）</a></li>
+</ul>
+
+<footer class="site-footer" role="contentinfo">
+  <p class="site-footer-title">免責事項 <span lang="en">Disclaimer</span></p>
+  <p>本資料は個人による学習用コンテンツであり、Adobe Inc. の公式見解・サポート文書ではありません。記載内容の正確性・完全性・将来にわたる妥当性を保証するものではありません。Adobe Analytics / Customer Journey Analytics の設定・解釈・契約に関する判断は、必ず Adobe Experience League の公式ドキュメントおよびご利用契約に従って行ってください。</p>
+  <p>本資料の利用または参照により生じた損害・不利益・トラブルについて、著者および本リポジトリの管理者は一切の責任を負いません。</p>
+  <div class="site-footer-en" lang="en">
+    <p>This material is provided for personal educational purposes only and is not an official Adobe Inc. statement, position, or support document. No warranty is made as to the accuracy, completeness, or continued applicability of the information. For decisions about Adobe Analytics or Customer Journey Analytics configuration, interpretation, or contractual matters, rely solely on the official Adobe Experience League documentation and your applicable agreements.</p>
+    <p>To the fullest extent permitted by law, the authors and the maintainers of this repository disclaim all liability for any loss, damage, or issues arising from use of or reliance on this material.</p>
+  </div>
+</footer>
+
+</main>
+
+<script>
+(function () {
+  /* ── Section wrapping ── */
+  function wrapSections() {
+    const main = document.querySelector('main');
+    main.querySelectorAll('hr').forEach(hr => hr.remove());
+    const nodes = Array.from(main.childNodes);
+    const preamble = [];
+    const groups = [];
+    let cur = null;
+    nodes.forEach(node => {
+      if (node.nodeType === 1 && node.tagName === 'H2') {
+        cur = { h2: node, children: [] };
+        groups.push(cur);
+      } else if (cur) {
+        cur.children.push(node);
+      } else {
+        preamble.push(node);
+      }
+    });
+    while (main.firstChild) main.removeChild(main.firstChild);
+    preamble.forEach(n => main.appendChild(n));
+    groups.forEach(g => {
+      const sec = document.createElement('section');
+      sec.className = 'doc-section';
+      sec.appendChild(g.h2);
+      let sub = null;
+      g.children.forEach(node => {
+        if (node.nodeType === 1 && node.tagName === 'H3') {
+          sub = document.createElement('div');
+          sub.className = 'subsection';
+          sec.appendChild(sub);
+          sub.appendChild(node);
+        } else if (sub) {
+          sub.appendChild(node);
+        } else {
+          sec.appendChild(node);
+        }
+      });
+      main.appendChild(sec);
+    });
+  }
+  wrapSections();
+
+  /* ── TOC generation (accordion) ── */
+  const list = document.getElementById('toc-list');
+  const headings = Array.from(document.querySelectorAll('main h2, main h3, main h4'));
+  let groupLi = null, subUl = null;
+
+  headings.forEach(h => {
+    const a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+
+    if (h.tagName === 'H2') {
+      a.classList.add('toc-h2');
+      groupLi = document.createElement('li');
+      groupLi.className = 'toc-group';
+      subUl = document.createElement('ul');
+      subUl.className = 'toc-sub';
+      groupLi.appendChild(a);
+      groupLi.appendChild(subUl);
+      list.appendChild(groupLi);
+
+      const g = groupLi;
+      a.addEventListener('click', () => {
+        const opening = !g.classList.contains('open');
+        list.querySelectorAll('.toc-group.open').forEach(x => x.classList.remove('open'));
+        if (opening) g.classList.add('open');
+      });
+    } else {
+      a.classList.add(h.tagName === 'H3' ? 'toc-h3' : 'toc-h4');
+      const li = document.createElement('li');
+      li.appendChild(a);
+      if (subUl) subUl.appendChild(li);
+    }
+  });
+
+  /* ── TOC active highlight + auto-expand ── */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      list.querySelectorAll('a.active').forEach(l => l.classList.remove('active'));
+      const target = list.querySelector('a[href="#' + e.target.id + '"]');
+      if (!target) return;
+      target.classList.add('active');
+      const parentGroup = target.closest('.toc-group');
+      if (parentGroup) {
+        list.querySelectorAll('.toc-group.open').forEach(g => g.classList.remove('open'));
+        parentGroup.classList.add('open');
+      }
+    });
+  }, { rootMargin: '0px 0px -70% 0px' });
+  headings.forEach(h => obs.observe(h));
+
+  /* ── External links open in new tab ── */
+  document.querySelectorAll('a[href^="https://"], a[href^="http://"]').forEach(a => {
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+  });
+
+  /* ── Table cell auto-highlight ── */
+  document.querySelectorAll('td').forEach(td => {
+    const t = td.textContent.trim();
+    if (t === '○') td.classList.add('cell-yes');
+    else if (t === '-') td.classList.add('cell-no');
+    if (t.includes('×')) td.classList.add('cell-ng');
+    if (t.includes('〇')) td.classList.add('cell-ok');
+  });
+
+  /* ── Auto-tag hs-row with data-row from label text ── */
+  document.querySelectorAll('.hs-row').forEach(row => {
+    const label = row.querySelector('.hs-label');
+    if (label && !row.dataset.row) row.dataset.row = label.textContent.trim();
+  });
+
+  /* ── Interactive bullet → hit-stream highlighting ── */
+  function findStreamsBefore(el) {
+    const ul = el.closest('ul');
+    if (!ul) return [];
+    const streams = [];
+    let prev = ul.previousElementSibling;
+    while (prev) {
+      if (prev.matches && prev.matches('h2, h3, h4, hr')) break;
+      if (prev.matches && prev.matches('.hitstream')) streams.unshift(prev);
+      else if (prev.querySelectorAll) {
+        prev.querySelectorAll('.hitstream').forEach(s => streams.unshift(s));
+      }
+      prev = prev.previousElementSibling;
+    }
+    return streams;
+  }
+
+  function highlightTargets(streams, targets) {
+    streams.forEach(stream => {
+      stream.classList.add('masked');
+      targets.forEach(target => {
+        // 1. data-row match → highlight all hits in that row
+        stream.querySelectorAll('.hs-row[data-row="' + target + '"]').forEach(row => {
+          row.querySelectorAll('.hs-hit').forEach(h => h.classList.add('hl-active'));
+        });
+        // 2. data-visit match → highlight hits in that visit
+        stream.querySelectorAll('.hs-visit[data-visit="' + target + '"]').forEach(visit => {
+          visit.querySelectorAll('.hs-hit').forEach(h => h.classList.add('hl-active'));
+        });
+        // 3. text match on .hs-hit (fallback for hit-level)
+        stream.querySelectorAll('.hs-hit').forEach(h => {
+          if (h.textContent.trim() === target) h.classList.add('hl-active');
+        });
+      });
+    });
+  }
+
+  function clearHighlight(streams) {
+    streams.forEach(stream => {
+      stream.classList.remove('masked');
+      stream.querySelectorAll('.hl-active').forEach(e => e.classList.remove('hl-active'));
+    });
+  }
+
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const targets = el.dataset.target.split(/\s+/).filter(Boolean);
+    let streams = [];
+    el.addEventListener('mouseenter', () => {
+      streams = findStreamsBefore(el);
+      highlightTargets(streams, targets);
+    });
+    el.addEventListener('mouseleave', () => {
+      clearHighlight(streams);
+    });
+  });
+
+  /* ── Tab-driven mode switching for interactive hitstreams ── */
+  function setMode(tabs, stream, mode) {
+    tabs.querySelectorAll('.hs-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    stream.dataset.mode = mode;
+  }
+  document.querySelectorAll('.hs-tabs').forEach(tabs => {
+    let stream = tabs.nextElementSibling;
+    while (stream && !stream.matches('.hitstream')) stream = stream.nextElementSibling;
+    if (!stream) return;
+    tabs.querySelectorAll('.hs-tab').forEach(btn => {
+      btn.addEventListener('click', () => setMode(tabs, stream, btn.dataset.mode));
+    });
+  });
+
+  /* ── Inject column header before each visitor block ── */
+  document.querySelectorAll('.hitstream.has-extract').forEach(stream => {
+    stream.querySelectorAll(':scope > .hs-row').forEach(row => {
+      if (row.previousElementSibling && row.previousElementSibling.classList.contains('hs-header')) return;
+      const header = document.createElement('div');
+      header.className = 'hs-header';
+      header.innerHTML = '<span class="hs-header-label">訪問者 / セグメント</span><span class="hs-header-flow">訪問フロー / 返却範囲</span>';
+      stream.insertBefore(header, row);
+    });
+  });
+
+  /* ── Sync label widths within each hitstream so columns align ── */
+  function syncLabelWidths() {
+    document.querySelectorAll('.hitstream.has-extract').forEach(stream => {
+      const labels = stream.querySelectorAll('.hs-label, .hs-header-label');
+      let maxW = 0;
+      labels.forEach(l => {
+        l.style.width = '';
+        l.style.minWidth = '';
+        l.style.flex = '';
+      });
+      labels.forEach(l => { maxW = Math.max(maxW, l.offsetWidth); });
+      maxW = Math.max(maxW, 56);
+      labels.forEach(l => {
+        l.style.flex = '0 0 ' + maxW + 'px';
+        l.style.width = maxW + 'px';
+      });
+    });
+  }
+  // Run after layout (defer to end of microtask queue + on resize)
+  setTimeout(syncLabelWidths, 0);
+  window.addEventListener('resize', syncLabelWidths);
+
+  /* ── Auto-build extract rows for .hitstream.has-extract ── */
+  const SEGMENT_LABEL = { hit: 'Hit', visit: 'Visit', visitor: 'Visitor', returned: '返却' };
+  document.querySelectorAll('.hitstream.has-extract').forEach(stream => {
+    const segments = (stream.dataset.segments || 'hit visit visitor').split(/[,\s]+/).filter(Boolean);
+    const customLabels = (stream.dataset.labels || '').split('|');
+    const labelOf = seg => {
+      const idx = segments.indexOf(seg);
+      if (idx >= 0 && customLabels[idx]) return customLabels[idx];
+      return SEGMENT_LABEL[seg] || seg;
+    };
+    stream.querySelectorAll(':scope > .hs-row').forEach(graphRow => {
+      const visits = graphRow.querySelectorAll(':scope > .hs-visit');
+      const attrEl = graphRow.querySelector(':scope > .hs-attr');
+      // Build extract rows
+      const extractRows = segments.map(seg => {
+        const row = document.createElement('div');
+        row.className = 'hs-extract-row';
+        row.dataset.mode = seg;
+        const lbl = document.createElement('span');
+        lbl.className = 'hs-label';
+        lbl.textContent = labelOf(seg);
+        row.appendChild(lbl);
+        if (attrEl) {
+          const ph = document.createElement('span');
+          ph.className = 'hs-attr-spacer';
+          ph.style.flex = '0 0 auto';
+          ph.style.visibility = 'hidden';
+          ph.textContent = attrEl.textContent;
+          ph.style.padding = '2px 8px';
+          ph.style.border = '1px solid transparent';
+          row.appendChild(ph);
+        }
+        const visitsWrap = document.createElement('div');
+        visitsWrap.className = 'hs-extract-visits';
+        visits.forEach(visit => {
+          const ev = document.createElement('div');
+          ev.className = 'hs-extract-visit';
+          visit.querySelectorAll(':scope > .hs-hit').forEach(hit => {
+            const cell = document.createElement('span');
+            cell.className = 'hs-extract-cell';
+            const modes = (hit.dataset.modes || '').split(/\s+/);
+            if (modes.includes(seg)) {
+              cell.classList.add('on');
+              cell.textContent = '○';
+            } else {
+              cell.textContent = '-';
+            }
+            ev.appendChild(cell);
+          });
+          visitsWrap.appendChild(ev);
+        });
+        row.appendChild(visitsWrap);
+        return row;
+      });
+      // Insert all extract rows after the graph row (preserving order)
+      let anchor = graphRow;
+      extractRows.forEach(r => {
+        anchor.parentNode.insertBefore(r, anchor.nextSibling);
+        anchor = r;
+      });
+      // Sync widths: each extract cell matches its corresponding hit pill
+      function syncWidths() {
+        visits.forEach((visit, vIdx) => {
+          const hits = visit.querySelectorAll(':scope > .hs-hit');
+          hits.forEach((hit, hIdx) => {
+            const w = hit.offsetWidth;
+            extractRows.forEach(row => {
+              const ev = row.querySelectorAll('.hs-extract-visit')[vIdx];
+              if (!ev) return;
+              const cell = ev.children[hIdx];
+              if (cell) cell.style.width = w + 'px';
+            });
+          });
+        });
+      }
+      // Ensure each .hs-visit is at least as wide as its time label, then sync extract visit widths
+      function syncVisitWidths() {
+        visits.forEach((visit, vIdx) => {
+          const time = visit.dataset.time;
+          if (time) {
+            // measure label width
+            const tmp = document.createElement('span');
+            tmp.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:10.5px;font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace';
+            tmp.textContent = time;
+            document.body.appendChild(tmp);
+            const labelW = tmp.offsetWidth;
+            document.body.removeChild(tmp);
+            visit.style.minWidth = labelW + 'px';
+          }
+          // mirror visit total width into extract visits
+          const w = visit.offsetWidth;
+          extractRows.forEach(row => {
+            const ev = row.querySelectorAll('.hs-extract-visit')[vIdx];
+            if (ev) ev.style.minWidth = w + 'px';
+          });
+        });
+      }
+      syncVisitWidths();
+      syncWidths();
+      window.addEventListener('resize', () => { syncVisitWidths(); syncWidths(); });
+    });
+  });
+
+  /* ── Segment-definition tooltip on extract row label hover ── */
+  let tooltipEl = null;
+  function showTooltip(target, html) {
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.className = 'tooltip-popup';
+      document.body.appendChild(tooltipEl);
+    }
+    tooltipEl.innerHTML = '<div class="tooltip-title">セグメント定義</div>' + html;
+    tooltipEl.style.display = 'block';
+    tooltipEl.style.top = '0px';
+    tooltipEl.style.left = '0px';
+    const tw = tooltipEl.offsetWidth;
+    const th = tooltipEl.offsetHeight;
+    const r = target.getBoundingClientRect();
+    const margin = 12;
+    // Vertical: prefer below; if not enough space, place above
+    const spaceBelow = window.innerHeight - r.bottom;
+    let top;
+    if (spaceBelow >= th + margin) {
+      top = r.bottom + window.scrollY + 8;
+    } else {
+      top = r.top + window.scrollY - th - 8;
+      if (top < window.scrollY + margin) top = window.scrollY + margin;
+    }
+    // Horizontal: keep within viewport
+    let left = r.left + window.scrollX;
+    if (left + tw > window.innerWidth + window.scrollX - margin) {
+      left = window.innerWidth + window.scrollX - tw - margin;
+    }
+    if (left < window.scrollX + margin) left = window.scrollX + margin;
+    tooltipEl.style.top = top + 'px';
+    tooltipEl.style.left = left + 'px';
+  }
+  function hideTooltip() {
+    if (tooltipEl) tooltipEl.style.display = 'none';
+  }
+  function findPrecedingCboxes(stream) {
+    const cboxes = [];
+    let prev = stream.previousElementSibling;
+    while (prev) {
+      if (prev.matches && prev.matches('h1, h2, h3, h4, hr')) break;
+      if (prev.matches && prev.matches('.cbox')) cboxes.unshift(prev);
+      else if (prev.querySelectorAll) {
+        const inner = prev.querySelectorAll('.cbox');
+        for (let i = inner.length - 1; i >= 0; i--) {
+          if (!inner[i].closest('.cbox-body')) cboxes.unshift(inner[i]);
+        }
+      }
+      prev = prev.previousElementSibling;
+    }
+    return cboxes;
+  }
+  document.addEventListener('mouseover', e => {
+    if (!e.target.matches || !e.target.matches('.hs-extract-row .hs-label')) return;
+    const stream = e.target.closest('.hitstream.has-extract');
+    if (!stream) return;
+    const segment = e.target.closest('.hs-extract-row').dataset.mode;
+    let cboxes = findPrecedingCboxes(stream);
+    if (cboxes.length === 0) return;
+    // If any cbox has data-defines-segment, filter strictly by it
+    const tagged = cboxes.filter(c => c.dataset.definesSegment);
+    if (tagged.length > 0) {
+      cboxes = tagged.filter(c => c.dataset.definesSegment.split(/[,\s]+/).includes(segment));
+    }
+    if (cboxes.length === 0) return;
+    const html = cboxes.map(c => c.outerHTML).join('');
+    showTooltip(e.target, html);
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.matches && e.target.matches('.hs-extract-row .hs-label')) {
+      hideTooltip();
+    }
+  });
+
+  /* ── Bullet hover → focus on a specific segment's extraction ── */
+  document.querySelectorAll('[data-mode-target]').forEach(el => {
+    const targets = el.dataset.modeTarget.split(/[,\s]+/).filter(Boolean);
+    let streams = [];
+    el.addEventListener('mouseenter', () => {
+      streams = findStreamsBefore(el);
+      streams.forEach(stream => {
+        stream.classList.add('focus');
+        targets.forEach(seg => {
+          stream.querySelectorAll('.hs-extract-row[data-mode="' + seg + '"]').forEach(row => {
+            row.classList.add('hs-row-active');
+          });
+          stream.querySelectorAll('.hs-row .hs-hit[data-modes]').forEach(hit => {
+            const modes = (hit.dataset.modes || '').split(/\s+/);
+            if (modes.includes(seg)) hit.classList.add('hs-hit-active');
+          });
+        });
+      });
+    });
+    el.addEventListener('mouseleave', () => {
+      streams.forEach(stream => {
+        stream.classList.remove('focus');
+        stream.querySelectorAll('.hs-row-active').forEach(e => e.classList.remove('hs-row-active'));
+        stream.querySelectorAll('.hs-hit-active').forEach(e => e.classList.remove('hs-hit-active'));
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
