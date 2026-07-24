@@ -213,6 +213,42 @@
     .diagram svg { display: block; width: 100%; height: auto; min-width: 720px; }
     .diagram figcaption { margin-top: 14px; color: var(--faint); font-size: .84rem; }
 
+    .diagram-mobile { display: none; }
+    .dm-step {
+      padding: 16px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+      border-radius: 12px; background: var(--panel-solid);
+    }
+    .dm-step .dm-label { display: block; font-weight: 800; margin-bottom: 4px; }
+    .dm-step p { margin: 0; color: var(--muted); font-size: .92rem; }
+    .dm-user .dm-label { color: var(--text); }
+    .dm-skill { border-left-color: var(--accent-3); }
+    .dm-skill .dm-label { color: var(--accent-3); }
+    .dm-context, .dm-judge { border-left-color: var(--accent-2); }
+    .dm-context .dm-label, .dm-judge .dm-label { color: var(--accent-2); }
+    .dm-model { border-left-color: var(--accent); }
+    .dm-model .dm-label { color: var(--accent); }
+    .dm-evals { border-left-color: var(--accent-3); border-style: dashed; }
+    .dm-evals .dm-label { color: var(--accent-3); }
+    .dm-arrow { text-align: center; color: var(--faint); font-size: 1.1rem; margin: 4px 0; }
+    .dm-branch {
+      margin: 6px 0 6px 22px; padding: 10px 14px; border-radius: 10px; font-size: .88rem;
+      border: 1px solid var(--line);
+    }
+    .dm-branch p { margin: 2px 0 0; color: var(--muted); }
+    .dm-branch-label { font-weight: 800; font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; }
+    .dm-tool { background: rgba(125,211,252,.06); }
+    .dm-tool .dm-branch-label { color: var(--accent); }
+    .dm-retry { background: rgba(251,191,36,.07); border: 1px dashed rgba(251,191,36,.35); }
+    .dm-retry .dm-branch-label { color: var(--warn); }
+    .dm-exit { background: rgba(134,239,172,.07); border-color: rgba(134,239,172,.3); }
+    .dm-exit .dm-branch-label { color: var(--good); }
+    .dm-divider { text-align: center; font-size: .72rem; letter-spacing: .05em; color: var(--faint); font-weight: 800; margin: 16px 0 6px; }
+
+    @media (max-width: 760px) {
+      .diagram { display: none; }
+      .diagram-mobile { display: block; margin: 34px 0; }
+    }
+
     footer { padding: 30px 24px 70px; border-top: 1px solid var(--line); color: var(--faint); }
     footer > div { width: min(var(--max), 100%); margin: 0 auto; }
 
@@ -458,6 +494,24 @@
 </svg>
 <figcaption>ユーザーの依頼とSkillがContextを形作り、Contextを受けたModelはLoop／Harnessの中で、必要ならRAG＆Toolsと往復して下書きを作ります。ループ判定ボックスが完成条件を満たすか判定し、満たさなければModelへ差し戻して再試行、満たせばループを抜けて同じユーザーへ最終出力を返します。ループ判定の結果はEvalsへ蓄積されますが、Evalsはこの1回のプロンプトのライフサイクル図の中では終端です。多数回ぶんの集計をSkillの見直しに使うのは、人手による別の営みとして、この図の外側にあります。</figcaption>
 </figure>
+
+<div class="diagram-mobile" role="img" aria-label="上の図と同じ内容を、スマホで読みやすいよう縦の手順として並べたもの">
+<div class="dm-step dm-user"><span class="dm-label">ユーザー</span><p>依頼をContextへ送る</p></div>
+<div class="dm-arrow">↓</div>
+<div class="dm-step dm-skill"><span class="dm-label">Skill / 手順</span><p>判断基準・完成条件をContextへ注入</p></div>
+<div class="dm-arrow">↓</div>
+<div class="dm-step dm-context"><span class="dm-label">Context / 文脈</span><p>依頼・履歴・資料・ツール定義</p></div>
+<div class="dm-arrow">↓</div>
+<div class="dm-step dm-model"><span class="dm-label">Model / 重み</span><p>推論して、ツール要求か下書きを選ぶ</p></div>
+<div class="dm-branch dm-tool"><span class="dm-branch-label">ツール要求の場合</span><p>RAG &amp; Tools が検索・実行し、結果をContextへ返す。Modelが再び推論する。</p></div>
+<div class="dm-arrow">↓</div>
+<div class="dm-step dm-judge"><span class="dm-label">ループ判定（Loop / Harness）</span><p>下書きが完成条件を満たすか判定</p></div>
+<div class="dm-branch dm-retry"><span class="dm-branch-label">満たさない</span><p>理由を伝えてModelへ差し戻し、再試行する。</p></div>
+<div class="dm-branch dm-exit"><span class="dm-branch-label">満たす</span><p>ループを抜けて、同じユーザーへ最終出力を返す。</p></div>
+<div class="dm-divider">ここから先は、1回の実行ループとは別のタイムスケール</div>
+<div class="dm-arrow">↓</div>
+<div class="dm-step dm-evals"><span class="dm-label">Evals / 品質管理</span><p>ループ判定の結果を多数回ぶん集計（正解率・引用・失敗率・コスト・速度）。この図の中では終端。</p></div>
+</div>
 
 <div class="summary-grid">
 <article class="card"><span class="num">1</span><h3>Skillは注意の設計</h3><p>知識を大量に足すより、AIが迷う箇所を、判断基準・工程・検査へ変換します。</p></article>
