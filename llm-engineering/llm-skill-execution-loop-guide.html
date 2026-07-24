@@ -99,40 +99,6 @@
     .btn:focus-visible { outline: 3px solid rgba(125,211,252,.32); outline-offset: 3px; }
     .btn.primary { color: #06111f; background: var(--accent); border-color: transparent; font-weight: 800; }
 
-    .mode-switch {
-      display: inline-grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px;
-      padding: 4px; border: 1px solid var(--line); border-radius: 15px;
-      background: rgba(5, 12, 24, .34); box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
-    }
-    html[data-theme="light"] .mode-switch { background: rgba(45, 65, 95, .06); }
-    .mode-switch .mode-btn {
-      position: relative; min-width: 132px; border-color: transparent; background: transparent;
-      color: var(--muted); box-shadow: none; font-weight: 750;
-    }
-    .mode-switch .mode-btn:hover {
-      transform: none; color: var(--text); background: rgba(125,211,252,.07); border-color: transparent;
-    }
-    .mode-switch .mode-btn:active { transform: scale(.97); }
-    .mode-switch .mode-btn::before {
-      content: ""; display: inline-block; width: 0; overflow: hidden;
-      margin-right: 0; vertical-align: -.08em; opacity: 0;
-      transition: width .18s ease, margin-right .18s ease, opacity .18s ease;
-    }
-    .mode-switch .mode-btn[aria-pressed="true"] {
-      color: #06111f; background: var(--accent); border-color: transparent; font-weight: 900;
-      box-shadow: 0 5px 18px rgba(3,105,161,.22), inset 0 1px 0 rgba(255,255,255,.38);
-    }
-    .mode-switch .mode-btn[aria-pressed="true"]::before {
-      content: "✓"; width: 1em; margin-right: .38em; opacity: 1;
-    }
-    .mode-switch .mode-btn[aria-pressed="false"] { opacity: .78; }
-    .mode-switch .mode-btn.mode-pulse { animation: mode-confirm .34s ease-out; }
-    @keyframes mode-confirm {
-      0% { transform: scale(.96); }
-      55% { transform: scale(1.035); }
-      100% { transform: scale(1); }
-    }
-
     .layout {
       width: min(var(--max), calc(100% - 32px)); margin: 0 auto;
       display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 52px;
@@ -239,25 +205,6 @@
     .source-list li { counter-increment: source; margin: 0 0 12px; padding: 14px 16px 14px 48px; position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
     .source-list li::before { content: counter(source); position: absolute; left: 15px; top: 13px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: rgba(125,211,252,.12); color: var(--accent); font-weight: 850; font-size: .78rem; }
     sup.ref a { text-decoration: none; font-weight: 800; }
-
-    .compact-only { display: none !important; }
-    body.mode-compact .compact-only { display: block !important; }
-    body.mode-compact main > section:not(#overview):not(#compact-summary) { display: none !important; }
-    body.mode-compact .toc a:not([href="#overview"]):not([href="#compact-summary"]) { display: none !important; }
-    body.mode-compact .deep-only { display: none !important; }
-    body.mode-compact section { margin-bottom: 64px; }
-    body.mode-compact .hero { min-height: auto; padding-bottom: 38px; }
-    .mode-status {
-      display: inline-flex; align-items: center; gap: 7px; min-height: 34px;
-      padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
-      color: var(--muted); background: var(--panel); font-size: .84rem; font-weight: 700;
-      transition: border-color .18s ease, color .18s ease, background .18s ease;
-    }
-    .mode-status::before {
-      content: ""; width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent-3); box-shadow: 0 0 0 4px rgba(94,234,212,.1);
-    }
-    body.mode-compact .mode-status { color: var(--text); border-color: rgba(125,211,252,.34); }
 
     footer { padding: 30px 24px 70px; border-top: 1px solid var(--line); color: var(--faint); }
     footer > div { width: min(var(--max), 100%); margin: 0 auto; }
@@ -380,13 +327,8 @@
 <div class="eyebrow">LLM SYSTEMS — SESSION SYNTHESIS</div>
 <h1>LLMサービスは<br/>どう「賢く動く」のか</h1>
 <p class="lead">モデル名だけでは説明できない「AIサービスの賢さ」を、モデル・文脈・Skill・RAG・ツール・実行ループ・評価の関係から一本のストーリーとして理解するガイドです。</p>
-<div class="hero-meta"><span>主線：モデルとサービスの区別 → 制御方法 → 実行 → ChatGPTの具体例 → 優位性の所在</span><span>補足：人間との比較などはTIPSへ分離</span><span>読了目安：要点 8分 / 全文 35–45分</span></div><div aria-label="情報の種類" class="content-legend"><span class="legend-chip legend-main">メインメッセージ</span><span class="legend-chip legend-build">仕組み・実装</span><span class="legend-chip legend-practice">実践判断</span><span class="legend-chip legend-tip">TIPS</span><span class="legend-chip legend-appendix">付録</span></div>
+<div class="hero-meta"><span>主線：モデルとサービスの区別 → 制御方法 → 実行 → ChatGPTの具体例 → 優位性の所在</span><span>補足：人間との比較などはTIPSへ分離</span><span>読了目安：35–45分</span></div><div aria-label="情報の種類" class="content-legend"><span class="legend-chip legend-main">メインメッセージ</span><span class="legend-chip legend-build">仕組み・実装</span><span class="legend-chip legend-practice">実践判断</span><span class="legend-chip legend-tip">TIPS</span><span class="legend-chip legend-appendix">付録</span></div>
 <div class="hero-actions">
-<div aria-label="表示モード" class="mode-switch" role="group">
-<button aria-pressed="true" class="btn mode-btn" data-mode="full" id="full-mode-btn" type="button">全文モード</button>
-<button aria-pressed="false" class="btn mode-btn" data-mode="compact" id="compact-mode-btn" type="button">要点モード</button>
-</div>
-<span aria-live="polite" class="mode-status" id="mode-status" role="status">表示中：全文モード</span>
 <button class="btn" id="theme-toggle-btn" type="button">表示テーマ切替</button>
 <button class="btn" id="print-btn" type="button">印刷 / PDF</button>
 </div>
@@ -394,7 +336,7 @@
 </header>
 <div class="layout">
 <aside>
-<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><a class="compact-only" href="#compact-summary">要点まとめ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. 実行ループ</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><a href="#moat">10. 優位性の所在</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
+<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. 実行ループ</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><a href="#moat">10. 優位性の所在</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
 </aside>
 <main><section id="overview"><div class="chapter-head"><div class="role-label role-main">メインメッセージ</div><div class="section-kicker">START — Mental Model</div><h2>最初に掴む、一本のメッセージ</h2><p class="lede">LLMは「思考と言語のエンジン」です。AIサービスは、そのエンジンへ必要な情報を渡し、現実の道具を使わせ、結果を検証するシステムです。</p></div>
 
@@ -418,24 +360,7 @@
           実用上の品質 ≈ 基盤モデル × 文脈設計 × 実行制御 × 外部能力 × 評価改善
           <div class="micro">※数学的な式ではなく、どれか一層が弱いと全体品質が下がる、という設計上の比喩です。</div>
 </div>
-<div class="takeaway"><strong>この章の結論</strong>モデルの能力と、サービスの制御・情報・道具・評価を分けて考えると、以降の概念がすべて整理できます。</div></section><section class="compact-only" id="compact-summary"><div class="chapter-head"><div class="role-label role-main">要点モード</div><div class="section-kicker">QUICK — Main Story</div><h2>7分でつなぐ、主線だけの理解</h2><p class="lede">補足や歴史的背景を外し、サービス設計の核心だけを順番に確認します。</p></div>
-
-
-
-<div class="summary-grid"><article class="card"><span class="num">1</span><h3>モデル ≠ サービス</h3><p>GPTやClaudeは基礎能力。完成サービスは、その周囲に文脈・ツール・制御・評価を持ちます。</p></article><article class="card"><span class="num">2</span><h3>特化の中心はシステム</h3><p>多くの「○○特化AI」は、汎用モデルを業務向けに動かす特化システムです。</p></article><article class="card"><span class="num">3</span><h3>Skillは判断の手順書</h3><p>目的・工程・判断基準・完成条件を与え、モデルの迷いを減らします。</p></article><article class="card"><span class="num">4</span><h3>重みと文脈を分ける</h3><p>Fine-tuningは重み。Skill・RAG・プロンプトは実行時コンテキストを使います。</p></article><article class="card"><span class="num">5</span><h3>Loopは外側のコード</h3><p>モデルは次の行動を選び、コードが実行・再試行・停止・承認を保証します。</p></article><article class="card"><span class="num">6</span><h3>二重ループは役割分担</h3><p>内側が一タスク、外側が業務全体を管理するなら有効です。</p></article><article class="card"><span class="num">7</span><h3>品質は評価で閉じる</h3><p>良い回答の基準を測定し、検索・Skill・モデル・ループを継続改善します。</p></article><article class="card"><span class="num">8</span><h3>優位性はデータ量でなく検索精度</h3><p>独自データは量ではなく、検索・評価ループの精度に比例して効き、新規タスクにはほぼ無力です。</p></article></div>
-<div class="thesis"><strong>特化AIの実態：</strong>多くの場合は「独自の特化モデル」ではなく、<mark>汎用モデル＋高品質な文脈＋業務ツール＋実行制御＋評価</mark>からなる特化システムです。</div>
-<h3>設計を決める一つの原則</h3>
-<table>
-<thead><tr><th>任せる対象</th><th>向いている実装</th></tr></thead>
-<tbody>
-<tr><td>意味の理解、曖昧な分類、調査方針、文章生成</td><td>モデル＋Skill／プロンプト</td></tr>
-<tr><td>回数制限、停止、権限、形式検証、承認、保存</td><td>確定的なコード／ワークフロー</td></tr>
-<tr><td>最新・固有情報の取得</td><td>RAG／検索／外部ツール</td></tr>
-<tr><td>繰り返し使う安定した出力傾向</td><td>必要に応じてFine-tuning</td></tr>
-</tbody>
-</table>
-<div class="callout good"><strong>最終理解</strong>モデルが「次に何をするか」を柔軟に選び、外側のシステムが「実際に行う・検証する・止める」を確実に管理します。Skillは、その選択を業務目的へ寄せる手順書です。</div>
-</section><section id="model-system"><div class="chapter-head"><div class="role-label role-main">メインメッセージ</div><div class="section-kicker">01 — Model vs Service</div><h2>まず区別する：モデルとAIサービス</h2><p class="lede">「何かに特化したAI」という表現は、モデルの重みが特化している場合と、汎用モデルの周辺システムが特化している場合を混ぜています。</p></div>
+<div class="takeaway"><strong>この章の結論</strong>モデルの能力と、サービスの制御・情報・道具・評価を分けて考えると、以降の概念がすべて整理できます。</div></section><section id="model-system"><div class="chapter-head"><div class="role-label role-main">メインメッセージ</div><div class="section-kicker">01 — Model vs Service</div><h2>まず区別する：モデルとAIサービス</h2><p class="lede">「何かに特化したAI」という表現は、モデルの重みが特化している場合と、汎用モデルの周辺システムが特化している場合を混ぜています。</p></div>
 
 
 
@@ -458,7 +383,7 @@
 <div class="card"><h4>品質基盤</h4><p>評価データ、形式検証、引用検査、失敗ログ、A/Bテスト、監査。</p></div>
 </div>
 
-<details class="deep-only">
+<details>
 <summary>RAGは「検索を1回するだけ」ではない</summary>
 <div class="details-body">
 <p>実用的なRAGは、質問の分類、検索語の書き換え、キーワード＋意味検索、権限フィルタ、鮮度判定、再順位付け、重複排除、必要箇所抽出、引用整合性確認まで含みます。RAGはモデルの重みを変えず、実行時に参照資料を選ぶ仕組みです。</p>
@@ -793,7 +718,7 @@ raise MaxStepsExceeded()</code></pre>
 </tbody>
 </table>
 <div class="callout warn"><strong>過去の資産だけでは未来を保証できない</strong>独自データの優位性は、そのタスクの何割が既知パターンの繰り返しかに比例します。本当に新規性の高い問題では、貯蔵庫の中に検索すべき正解がそもそも存在しません。ここで効くのは蓄積ではなく、モデルの生の推論力と、「これは前例に一致しない」と正直に認識できる仕組みです。</div>
-<div class="takeaway"><strong>この章の結論</strong>優位性はモデルにもSkillの巧拙にも宿らず、模倣困難な資産（データ＋検索精度＋評価ループ＋統合）にのみ宿ります。そしてその資産すら、繰り返しパターンのタスクにしか効きません。</div></section><section class="deep-only" id="appendix"><div class="chapter-head"><div class="role-label role-appendix">補足・付録</div><div class="section-kicker">APPENDIX</div><h2>TIPSと詳細資料</h2></div><div class="support-note"><strong>ここからは主線ではありません</strong>直感を補う比喩、用語、学習経路、時点依存の注意をまとめています。本文を理解するために必須ではありません。</div><details class="tip-panel">
+<div class="takeaway"><strong>この章の結論</strong>優位性はモデルにもSkillの巧拙にも宿らず、模倣困難な資産（データ＋検索精度＋評価ループ＋統合）にのみ宿ります。そしてその資産すら、繰り返しパターンのタスクにしか効きません。</div></section><section id="appendix"><div class="chapter-head"><div class="role-label role-appendix">補足・付録</div><div class="section-kicker">APPENDIX</div><h2>TIPSと詳細資料</h2></div><div class="support-note"><strong>ここからは主線ではありません</strong>直感を補う比喩、用語、学習経路、時点依存の注意をまとめています。本文を理解するために必須ではありません。</div><details class="tip-panel">
 <summary>人間とLLMの違いを一文で</summary>
 <div class="details-body"><p>人間は長年の経験を、注意・習慣・身体・環境フィードバックへ内在化しています。LLMは一般能力を持ちますが、今回の仕事固有の目的・状態・完成条件を外から与えた方が安定します。</p></div>
 </details>
@@ -851,7 +776,7 @@ raise MaxStepsExceeded()</code></pre>
 <blockquote class="quote">LLMサービスの本質は、巨大なモデルに全部を任せることではない。モデルが得意な曖昧な意味判断と、コードが得意な確実な制御を分業し、必要な情報だけを必要な瞬間に渡し、現実の結果で検証することである。</blockquote>
 </div>
 </details>
-</section><section class="deep-only" id="sources"><div class="chapter-head"><div class="role-label role-appendix">参考資料</div><div class="section-kicker">SOURCES</div><h2>参考資料</h2><p class="lede">製品仕様は公式ドキュメント、認知に関する説明は研究レビュー・論文を優先しています。リンクは2026年7月23日に確認しました。</p></div>
+</section><section id="sources"><div class="chapter-head"><div class="role-label role-appendix">参考資料</div><div class="section-kicker">SOURCES</div><h2>参考資料</h2><p class="lede">製品仕様は公式ドキュメント、認知に関する説明は研究レビュー・論文を優先しています。リンクは2026年7月23日に確認しました。</p></div>
 
 
 
@@ -879,7 +804,6 @@ raise MaxStepsExceeded()</code></pre>
 </footer>
 <script>
     const root = document.documentElement;
-    const body = document.body;
     const progress = document.getElementById('progress');
     const links = [...document.querySelectorAll('.toc a')];
     const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
@@ -887,53 +811,17 @@ raise MaxStepsExceeded()</code></pre>
     function safeGet(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
     function safeSet(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
 
-    function setMode(mode, options = {}) {
-      const compact = mode === 'compact';
-      body.classList.toggle('mode-compact', compact);
-      body.dataset.mode = compact ? 'compact' : 'full';
-
-      document.querySelectorAll('.mode-btn').forEach((button) => {
-        const selected = button.dataset.mode === (compact ? 'compact' : 'full');
-        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
-        button.setAttribute('aria-current', selected ? 'true' : 'false');
-        if (selected && options.feedback) {
-          button.classList.remove('mode-pulse');
-          void button.offsetWidth;
-          button.classList.add('mode-pulse');
-        }
-      });
-
-      const status = document.getElementById('mode-status');
-      if (status) status.textContent = compact ? '表示中：要点モード' : '表示中：全文モード';
-      document.title = compact
-        ? '【要点版】LLMサービスはどう「賢く動く」のか'
-        : 'LLMサービスはどう「賢く動く」のか — Skill・RAG・実行ループ・ChatGPTの全体像';
-
-      safeSet('llm-guide-mode', compact ? 'compact' : 'full');
-      requestAnimationFrame(updateScroll);
-
-      if (options.scroll) {
-        const target = document.getElementById(compact ? 'overview' : 'overview');
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-
     function toggleTheme() {
       const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
       root.dataset.theme = next;
       safeSet('llm-guide-theme', next);
     }
 
-    document.querySelectorAll('.mode-btn').forEach((button) => {
-      button.addEventListener('click', () => setMode(button.dataset.mode, { scroll: true, feedback: true }));
-    });
     document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
     document.getElementById('print-btn')?.addEventListener('click', () => window.print());
 
     const storedTheme = safeGet('llm-guide-theme');
     if (storedTheme) root.dataset.theme = storedTheme;
-    const storedMode = safeGet('llm-guide-mode');
-    setMode(storedMode === 'compact' ? 'compact' : 'full');
 
     function updateScroll() {
       const h = document.documentElement;
