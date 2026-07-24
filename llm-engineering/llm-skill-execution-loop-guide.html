@@ -358,8 +358,8 @@
 <div class="layer"><div class="layer-label">⑥ Evals / 品質管理</div><div>正解率、引用、形式、失敗率、コスト、速度を測り、改善を続ける仕組み。</div></div>
 </div>
 
-<figure class="diagram" role="img" aria-label="Skillが文脈を形作り、文脈がモデルへ入り、モデルがLoop／Harnessの中でRAG＆Toolsとの往復を経て最終出力を出し、Evalsがその出力を測定してSkillとRAG＆Toolsへ継続的に改善をフィードバックする、6要素の関係図">
-<svg viewbox="0 0 1000 720" xmlns="http://www.w3.org/2000/svg">
+<figure class="diagram" role="img" aria-label="ユーザー入力とSkillがContextへ入り、ContextがModelへ渡り、ModelはLoop／Harnessの中でRAG＆Toolsとの往復、またはEvalsによる下書きの検証と再試行を繰り返し、合格して初めてループを抜けて最終出力になる関係図">
+<svg viewbox="0 0 1020 800" xmlns="http://www.w3.org/2000/svg">
 <style>
   .dg-box { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1.5; }
   .dg-loop { fill: none; stroke: var(--accent-2); stroke-width: 1.5; stroke-dasharray: 6 6; }
@@ -368,8 +368,10 @@
   .dg-caption { font: 800 12px -apple-system, "Hiragino Sans", sans-serif; letter-spacing: .08em; }
   .dg-arrow { fill: none; stroke: var(--faint); stroke-width: 1.8; }
   .dg-arrow-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--muted); }
-  .dg-feedback { fill: none; stroke: var(--warn); stroke-width: 1.8; stroke-dasharray: 3 6; }
-  .dg-feedback-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--warn); }
+  .dg-retry { fill: none; stroke: var(--warn); stroke-width: 1.8; stroke-dasharray: 3 6; }
+  .dg-retry-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--warn); }
+  .dg-exit { fill: none; stroke: var(--good); stroke-width: 1.8; }
+  .dg-exit-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--good); }
 </style>
 <defs>
 <marker id="dg-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -378,56 +380,65 @@
 <marker id="dg-arrowhead-warn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
 <path d="M0,0 L6,3 L0,6 Z" fill="var(--warn)"></path>
 </marker>
+<marker id="dg-arrowhead-good" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+<path d="M0,0 L6,3 L0,6 Z" fill="var(--good)"></path>
+</marker>
 </defs>
 
-<rect class="dg-loop" x="300" y="112" width="470" height="330" rx="22"></rect>
-<text class="dg-caption" x="318" y="100" fill="var(--accent-2)">LOOP / HARNESS — 外側の制御プログラム</text>
+<rect class="dg-loop" x="280" y="36" width="500" height="560" rx="24"></rect>
+<text class="dg-caption" x="298" y="24" fill="var(--accent-2)">LOOP / HARNESS — 呼ぶ・実行する・検証し再試行する</text>
 
-<rect class="dg-box" x="50" y="164" width="212" height="80" rx="14"></rect>
-<text class="dg-label" x="70" y="196" fill="var(--accent-3)">Skill / 手順</text>
-<text class="dg-sub" x="70" y="220">判断基準・工程・完成条件を定義</text>
+<rect class="dg-box" x="40" y="30" width="190" height="64" rx="14"></rect>
+<text class="dg-label" x="58" y="60" fill="var(--text)">ユーザー入力</text>
+<text class="dg-sub" x="58" y="82">今回の依頼</text>
 
-<rect class="dg-box" x="332" y="144" width="400" height="76" rx="14"></rect>
-<text class="dg-label" x="352" y="176" fill="var(--accent-2)">Context / 文脈</text>
-<text class="dg-sub" x="352" y="200">今回渡す入力（履歴・資料・ツール定義）</text>
+<rect class="dg-box" x="40" y="130" width="190" height="76" rx="14"></rect>
+<text class="dg-label" x="58" y="162" fill="var(--accent-3)">Skill / 手順</text>
+<text class="dg-sub" x="58" y="186">判断基準・完成条件を定義</text>
 
-<rect class="dg-box" x="332" y="306" width="400" height="100" rx="14"></rect>
-<text class="dg-label" x="352" y="340" fill="var(--accent)">Model / 重み</text>
-<text class="dg-sub" x="352" y="364">推論して、回答かツール要求を選ぶ</text>
+<rect class="dg-box" x="310" y="60" width="440" height="70" rx="14"></rect>
+<text class="dg-label" x="330" y="92" fill="var(--accent-2)">Context / 文脈</text>
+<text class="dg-sub" x="330" y="115">依頼・履歴・資料・ツール定義</text>
 
-<rect class="dg-box" x="806" y="276" width="200" height="80" rx="14"></rect>
-<text class="dg-label" x="826" y="308" fill="var(--accent)">RAG &amp; Tools</text>
-<text class="dg-sub" x="826" y="332">検索・実行・外部データ</text>
+<rect class="dg-box" x="310" y="200" width="440" height="90" rx="14"></rect>
+<text class="dg-label" x="330" y="234" fill="var(--accent)">Model / 重み</text>
+<text class="dg-sub" x="330" y="258">推論して、ツール要求か下書きを選ぶ</text>
 
-<rect class="dg-box" x="430" y="488" width="200" height="58" rx="14"></rect>
-<text class="dg-label" x="450" y="524" fill="var(--text)">最終出力</text>
+<rect class="dg-box" x="810" y="215" width="170" height="90" rx="14"></rect>
+<text class="dg-label" x="828" y="248" fill="var(--accent)">RAG &amp; Tools</text>
+<text class="dg-sub" x="828" y="271">検索・実行・外部データ</text>
 
-<rect class="dg-box" x="410" y="592" width="240" height="80" rx="14"></rect>
-<text class="dg-label" x="430" y="626" fill="var(--accent-3)">Evals / 品質管理</text>
-<text class="dg-sub" x="430" y="650">正解率・引用・失敗率を測定</text>
+<rect class="dg-box" x="310" y="440" width="440" height="90" rx="14"></rect>
+<text class="dg-label" x="330" y="474" fill="var(--accent-3)">Evals / 品質管理</text>
+<text class="dg-sub" x="330" y="498">下書きをSkillの完成条件と照合</text>
 
-<path class="dg-arrow" d="M262,202 L332,182" marker-end="url(#dg-arrowhead)"></path>
-<text class="dg-arrow-label" x="266" y="192">手順を注入</text>
+<rect class="dg-box" x="390" y="660" width="240" height="64" rx="14"></rect>
+<text class="dg-label" x="410" y="694" fill="var(--text)">最終出力 → ユーザーへ</text>
 
-<path class="dg-arrow" d="M532,220 L532,306" marker-end="url(#dg-arrowhead)"></path>
+<path class="dg-arrow" d="M230,62 L310,88" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="236" y="78">今回の依頼</text>
 
-<path class="dg-arrow" d="M732,346 L806,320" marker-end="url(#dg-arrowhead)"></path>
-<text class="dg-arrow-label" x="738" y="338">ツール要求</text>
+<path class="dg-arrow" d="M230,168 L310,112" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="236" y="150">手順を注入</text>
 
-<path class="dg-arrow" d="M806,300 L732,196" marker-end="url(#dg-arrowhead)"></path>
-<text class="dg-arrow-label" x="742" y="256">結果を返す</text>
+<path class="dg-arrow" d="M530,130 L530,200" marker-end="url(#dg-arrowhead)"></path>
 
-<path class="dg-arrow" d="M532,406 L532,488" marker-end="url(#dg-arrowhead)"></path>
-<text class="dg-arrow-label" x="538" y="452">完成条件を満たす</text>
+<path class="dg-arrow" d="M750,232 L810,245" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="754" y="226">ツール要求</text>
 
-<path class="dg-arrow" d="M532,546 L532,592" marker-end="url(#dg-arrowhead)"></path>
+<path class="dg-arrow" d="M810,225 L750,100" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="758" y="170">結果を返す</text>
 
-<path class="dg-feedback" d="M410,624 C 110,624 40,420 148,240" marker-end="url(#dg-arrowhead-warn)"></path>
-<path class="dg-feedback" d="M650,624 C 970,624 1010,400 908,352" marker-end="url(#dg-arrowhead-warn)"></path>
-<text class="dg-feedback-label" x="46" y="440">継続改善</text>
-<text class="dg-feedback-label" x="912" y="440">継続改善</text>
+<path class="dg-arrow" d="M530,290 L530,440" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="536" y="370">下書きを検証</text>
+
+<path class="dg-retry" d="M310,470 C 130,470 130,260 310,250" marker-end="url(#dg-arrowhead-warn)"></path>
+<text class="dg-retry-label" x="140" y="360">不合格：理由を伝えて再試行</text>
+
+<path class="dg-exit" d="M510,530 L510,660" marker-end="url(#dg-arrowhead-good)"></path>
+<text class="dg-exit-label" x="516" y="600">合格＝ループを抜ける</text>
 </svg>
-<figcaption>Skillが文脈を形作り、Model・Context・RAG＆ToolsがLoop／Harnessの中で往復し、完成条件を満たした出力をEvalsが測定して、SkillとRAG＆Toolsへ改善を戻し続けます。</figcaption>
+<figcaption>ユーザー入力とSkillがContextを形作り、Contextを受けたModelはLoop／Harnessの中で、必要ならRAG＆Toolsと往復し、下書きができたらEvalsが検証します。不合格ならModelへ差し戻して再試行し、合格して初めてループを抜けて最終出力になります。なお、多数回の実行結果を集計してSkillやRAGの中身を改善していく取り組みは、この1回のループとは別の、もっと遅いサイクルです。</figcaption>
 </figure>
 
 <div class="summary-grid">
