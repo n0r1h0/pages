@@ -358,10 +358,11 @@
 <div class="layer"><div class="layer-label">⑥ Evals / 品質管理</div><div>正解率、引用、形式、失敗率、コスト、速度を測り、改善を続ける仕組み。</div></div>
 </div>
 
-<figure class="diagram" role="img" aria-label="ユーザーがContextへ依頼を送り、SkillもContextを形作る。ModelはLoop／Harnessの中でRAG＆Toolsと往復しながら下書きを作り、Loop／Harness自身が完成条件を満たすか判定する。満たさなければModelへ差し戻し、満たせばループを抜けて同じユーザーへ最終出力を返す。Evalsはユーザーからではなく、Loop／Harnessの判定結果を多数回ぶん集計してSkillの基準を継続改善する、別のタイムスケールの営みとして離れた位置に描いている">
+<figure class="diagram" role="img" aria-label="ユーザーがContextへ依頼を送り、SkillもContextを形作る。ModelはLoop／Harnessの中でRAG＆Toolsと往復しながら下書きを作り、ループ判定ボックスが完成条件を満たすか判定する。満たさなければModelへ差し戻し、満たせばループを抜けて同じユーザーへ最終出力を返す。ループ判定の結果はEvalsへ蓄積されるが、Evalsはこの図の中では終端で、そこから先へは何も伸びない">
 <svg viewbox="0 0 1020 760" xmlns="http://www.w3.org/2000/svg">
 <style>
   .dg-box { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1.5; }
+  .dg-box-judge { fill: var(--panel-solid); stroke: var(--accent-2); stroke-width: 1.5; }
   .dg-box-evals { fill: var(--panel-solid); stroke: var(--accent-3); stroke-width: 1.5; stroke-dasharray: 4 4; }
   .dg-loop { fill: none; stroke: var(--accent-2); stroke-width: 1.5; stroke-dasharray: 6 6; }
   .dg-divider { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 2 5; }
@@ -377,7 +378,6 @@
   .dg-exit-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--good); }
   .dg-evals-arrow { fill: none; stroke: var(--accent-3); stroke-width: 1.6; stroke-dasharray: 3 6; }
   .dg-evals-label { font: 700 11.5px -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; fill: var(--accent-3); }
-  .dg-junction { fill: var(--accent-2); }
 </style>
 <defs>
 <marker id="dg-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -394,17 +394,17 @@
 </marker>
 </defs>
 
-<rect class="dg-loop" x="280" y="30" width="500" height="380" rx="24"></rect>
+<rect class="dg-loop" x="280" y="30" width="500" height="410" rx="24"></rect>
 <text class="dg-caption" x="298" y="18" fill="var(--accent-2)">LOOP / HARNESS — 呼ぶ・実行する・判定し再試行する</text>
 
 <rect class="dg-box" x="40" y="30" width="190" height="76" rx="14"></rect>
 <text class="dg-label" x="58" y="62" fill="var(--accent-3)">Skill / 手順</text>
 <text class="dg-sub" x="58" y="86">判断基準・完成条件を定義</text>
 
-<rect class="dg-box" x="40" y="240" width="190" height="90" rx="14"></rect>
-<text class="dg-label" x="58" y="272" fill="var(--text)">ユーザー</text>
-<text class="dg-sub" x="58" y="296">依頼を送り、結果を</text>
-<text class="dg-sub" x="58" y="312">受け取る</text>
+<rect class="dg-box" x="40" y="255" width="190" height="90" rx="14"></rect>
+<text class="dg-label" x="58" y="287" fill="var(--text)">ユーザー</text>
+<text class="dg-sub" x="58" y="311">依頼を送り、結果を</text>
+<text class="dg-sub" x="58" y="327">受け取る</text>
 
 <rect class="dg-box" x="310" y="54" width="440" height="70" rx="14"></rect>
 <text class="dg-label" x="330" y="86" fill="var(--accent-2)">Context / 文脈</text>
@@ -418,15 +418,19 @@
 <text class="dg-label" x="828" y="238" fill="var(--accent)">RAG &amp; Tools</text>
 <text class="dg-sub" x="828" y="261">検索・実行・外部データ</text>
 
-<line class="dg-divider" x1="60" y1="540" x2="960" y2="540"></line>
-<text class="dg-divider-label" x="60" y="530">ここから先は、1回の実行ループとは別のタイムスケール（サービス全体の継続改善）</text>
+<rect class="dg-box-judge" x="390" y="330" width="280" height="72" rx="14"></rect>
+<text class="dg-label" x="410" y="362" fill="var(--accent-2)">ループ判定</text>
+<text class="dg-sub" x="410" y="386">下書きが完成条件を満たすか判定</text>
 
-<rect class="dg-box-evals" x="370" y="565" width="280" height="92" rx="14"></rect>
-<text class="dg-label" x="390" y="599" fill="var(--accent-3)">Evals / 品質管理</text>
-<text class="dg-sub" x="390" y="623">Loop／Harnessの判定結果を多数回ぶん集計</text>
-<text class="dg-sub" x="390" y="639">正解率・引用・失敗率・コスト・速度</text>
+<line class="dg-divider" x1="60" y1="560" x2="960" y2="560"></line>
+<text class="dg-divider-label" x="60" y="550">ここから先は、1回の実行ループとは別のタイムスケール（サービス全体の継続改善）</text>
 
-<path class="dg-arrow" d="M230,270 C 260,270 280,180 310,118" marker-end="url(#dg-arrowhead)"></path>
+<rect class="dg-box-evals" x="370" y="585" width="280" height="92" rx="14"></rect>
+<text class="dg-label" x="390" y="619" fill="var(--accent-3)">Evals / 品質管理</text>
+<text class="dg-sub" x="390" y="643">ループ判定の結果を多数回ぶん集計</text>
+<text class="dg-sub" x="390" y="659">正解率・引用・失敗率・コスト・速度</text>
+
+<path class="dg-arrow" d="M230,285 C 260,285 280,180 310,118" marker-end="url(#dg-arrowhead)"></path>
 <text class="dg-arrow-label" x="236" y="200">今回の依頼</text>
 
 <path class="dg-arrow" d="M230,80 L310,80" marker-end="url(#dg-arrowhead)"></path>
@@ -440,23 +444,19 @@
 <path class="dg-arrow" d="M810,215 L750,95" marker-end="url(#dg-arrowhead)"></path>
 <text class="dg-arrow-label" x="758" y="160">結果を返す</text>
 
-<path class="dg-arrow" d="M530,290 L530,318" fill="none"></path>
-<circle class="dg-junction" cx="530" cy="318" r="5"></circle>
-<text class="dg-arrow-label" x="548" y="312" fill="var(--accent-2)">Loop／Harnessが判定</text>
+<path class="dg-arrow" d="M530,290 L530,330" marker-end="url(#dg-arrowhead)"></path>
+<text class="dg-arrow-label" x="538" y="316">下書き</text>
 
-<path class="dg-retry" d="M516,320 C 462,368 458,295 493,290" marker-end="url(#dg-arrowhead-warn)"></path>
-<text class="dg-retry-label" x="380" y="378">満たさない：理由を伝えて再試行</text>
+<path class="dg-retry" d="M420,330 C 380,300 400,270 480,290" marker-end="url(#dg-arrowhead-warn)"></path>
+<text class="dg-retry-label" x="330" y="304">満たさない：再試行</text>
 
-<path class="dg-exit" d="M520,324 C 400,326 320,308 230,300" marker-end="url(#dg-arrowhead-good)"></path>
-<text class="dg-exit-label" x="300" y="284">完成条件を満たす：最終出力</text>
+<path class="dg-exit" d="M390,350 C 320,336 270,320 230,308" marker-end="url(#dg-arrowhead-good)"></path>
+<text class="dg-exit-label" x="248" y="332">満たす：最終出力</text>
 
-<path class="dg-evals-arrow" d="M545,326 C 660,340 660,470 510,565" marker-end="url(#dg-arrowhead-evals)"></path>
-<text class="dg-evals-label" x="556" y="470">判定結果を集計</text>
-
-<path class="dg-evals-arrow" d="M370,600 C 90,600 20,340 40,150" marker-end="url(#dg-arrowhead-evals)"></path>
-<text class="dg-evals-label" x="30" y="420">完成条件・判断基準を改善</text>
+<path class="dg-evals-arrow" d="M540,402 L520,585" marker-end="url(#dg-arrowhead-evals)"></path>
+<text class="dg-evals-label" x="546" y="500">判定結果を集計</text>
 </svg>
-<figcaption>ユーザーの依頼とSkillがContextを形作り、Contextを受けたModelはLoop／Harnessの中で、必要ならRAG＆Toolsと往復して下書きを作ります。完成条件を満たすかをLoop／Harness自身が判定し、満たさなければModelへ差し戻して再試行、満たせばループを抜けて同じユーザーへ最終出力を返します。Evalsはユーザーからではなく、Loop／Harnessの判定結果を多数回ぶん集計する、この1回のループの外側・別のタイムスケールの営みで、Skillが定義する完成条件・判断基準そのものを継続的に改善します。</figcaption>
+<figcaption>ユーザーの依頼とSkillがContextを形作り、Contextを受けたModelはLoop／Harnessの中で、必要ならRAG＆Toolsと往復して下書きを作ります。ループ判定ボックスが完成条件を満たすか判定し、満たさなければModelへ差し戻して再試行、満たせばループを抜けて同じユーザーへ最終出力を返します。ループ判定の結果はEvalsへ蓄積されますが、Evalsはこの1回のプロンプトのライフサイクル図の中では終端です。多数回ぶんの集計をSkillの見直しに使うのは、人手による別の営みとして、この図の外側にあります。</figcaption>
 </figure>
 
 <div class="summary-grid">
