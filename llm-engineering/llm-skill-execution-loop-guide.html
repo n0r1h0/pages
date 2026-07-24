@@ -380,7 +380,7 @@
 <div class="eyebrow">LLM SYSTEMS — SESSION SYNTHESIS</div>
 <h1>LLMサービスは<br/>どう「賢く動く」のか</h1>
 <p class="lead">モデル名だけでは説明できない「AIサービスの賢さ」を、モデル・文脈・Skill・RAG・ツール・実行ループ・評価の関係から一本のストーリーとして理解するガイドです。</p>
-<div class="hero-meta"><span>主線：モデルとサービスの区別 → 制御方法 → 実行 → ChatGPTの具体例</span><span>補足：人間との比較などはTIPSへ分離</span><span>読了目安：要点 7分 / 全文 30–40分</span></div><div aria-label="情報の種類" class="content-legend"><span class="legend-chip legend-main">メインメッセージ</span><span class="legend-chip legend-build">仕組み・実装</span><span class="legend-chip legend-practice">実践判断</span><span class="legend-chip legend-tip">TIPS</span><span class="legend-chip legend-appendix">付録</span></div>
+<div class="hero-meta"><span>主線：モデルとサービスの区別 → 制御方法 → 実行 → ChatGPTの具体例 → 優位性の所在</span><span>補足：人間との比較などはTIPSへ分離</span><span>読了目安：要点 8分 / 全文 35–45分</span></div><div aria-label="情報の種類" class="content-legend"><span class="legend-chip legend-main">メインメッセージ</span><span class="legend-chip legend-build">仕組み・実装</span><span class="legend-chip legend-practice">実践判断</span><span class="legend-chip legend-tip">TIPS</span><span class="legend-chip legend-appendix">付録</span></div>
 <div class="hero-actions">
 <div aria-label="表示モード" class="mode-switch" role="group">
 <button aria-pressed="true" class="btn mode-btn" data-mode="full" id="full-mode-btn" type="button">全文モード</button>
@@ -394,7 +394,7 @@
 </header>
 <div class="layout">
 <aside>
-<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><a class="compact-only" href="#compact-summary">要点まとめ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. 実行ループ</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
+<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><a class="compact-only" href="#compact-summary">要点まとめ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. 実行ループ</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><a href="#moat">10. 優位性の所在</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
 </aside>
 <main><section id="overview"><div class="chapter-head"><div class="role-label role-main">メインメッセージ</div><div class="section-kicker">START — Mental Model</div><h2>最初に掴む、一本のメッセージ</h2><p class="lede">LLMは「思考と言語のエンジン」です。AIサービスは、そのエンジンへ必要な情報を渡し、現実の道具を使わせ、結果を検証するシステムです。</p></div>
 
@@ -422,7 +422,7 @@
 
 
 
-<div class="summary-grid"><article class="card"><span class="num">1</span><h3>モデル ≠ サービス</h3><p>GPTやClaudeは基礎能力。完成サービスは、その周囲に文脈・ツール・制御・評価を持ちます。</p></article><article class="card"><span class="num">2</span><h3>特化の中心はシステム</h3><p>多くの「○○特化AI」は、汎用モデルを業務向けに動かす特化システムです。</p></article><article class="card"><span class="num">3</span><h3>Skillは判断の手順書</h3><p>目的・工程・判断基準・完成条件を与え、モデルの迷いを減らします。</p></article><article class="card"><span class="num">4</span><h3>重みと文脈を分ける</h3><p>Fine-tuningは重み。Skill・RAG・プロンプトは実行時コンテキストを使います。</p></article><article class="card"><span class="num">5</span><h3>Loopは外側のコード</h3><p>モデルは次の行動を選び、コードが実行・再試行・停止・承認を保証します。</p></article><article class="card"><span class="num">6</span><h3>二重ループは役割分担</h3><p>内側が一タスク、外側が業務全体を管理するなら有効です。</p></article><article class="card"><span class="num">7</span><h3>品質は評価で閉じる</h3><p>良い回答の基準を測定し、検索・Skill・モデル・ループを継続改善します。</p></article></div>
+<div class="summary-grid"><article class="card"><span class="num">1</span><h3>モデル ≠ サービス</h3><p>GPTやClaudeは基礎能力。完成サービスは、その周囲に文脈・ツール・制御・評価を持ちます。</p></article><article class="card"><span class="num">2</span><h3>特化の中心はシステム</h3><p>多くの「○○特化AI」は、汎用モデルを業務向けに動かす特化システムです。</p></article><article class="card"><span class="num">3</span><h3>Skillは判断の手順書</h3><p>目的・工程・判断基準・完成条件を与え、モデルの迷いを減らします。</p></article><article class="card"><span class="num">4</span><h3>重みと文脈を分ける</h3><p>Fine-tuningは重み。Skill・RAG・プロンプトは実行時コンテキストを使います。</p></article><article class="card"><span class="num">5</span><h3>Loopは外側のコード</h3><p>モデルは次の行動を選び、コードが実行・再試行・停止・承認を保証します。</p></article><article class="card"><span class="num">6</span><h3>二重ループは役割分担</h3><p>内側が一タスク、外側が業務全体を管理するなら有効です。</p></article><article class="card"><span class="num">7</span><h3>品質は評価で閉じる</h3><p>良い回答の基準を測定し、検索・Skill・モデル・ループを継続改善します。</p></article><article class="card"><span class="num">8</span><h3>優位性はデータ量でなく検索精度</h3><p>独自データは量ではなく、検索・評価ループの精度に比例して効き、新規タスクにはほぼ無力です。</p></article></div>
 <div class="thesis"><strong>特化AIの実態：</strong>多くの場合は「独自の特化モデル」ではなく、<mark>汎用モデル＋高品質な文脈＋業務ツール＋実行制御＋評価</mark>からなる特化システムです。</div>
 <h3>設計を決める一つの原則</h3>
 <table>
@@ -748,7 +748,52 @@ raise MaxStepsExceeded()</code></pre>
 </div>
 </div>
 <div class="callout good"><strong>強い答え</strong>「専門家プロンプトを使っています」ではなく、「この評価セットで見落とし率を測り、この条件で再検索し、引用を機械検証し、重大操作は承認を要求します」と説明できること。</div>
-<div class="takeaway"><strong>この章の結論</strong>「どのモデルか」だけでなく、「何を読ませ、何を実行し、どう検証し、どう改善しているか」を聞くべきです。</div></section><section class="deep-only" id="appendix"><div class="chapter-head"><div class="role-label role-appendix">補足・付録</div><div class="section-kicker">APPENDIX</div><h2>TIPSと詳細資料</h2></div><div class="support-note"><strong>ここからは主線ではありません</strong>直感を補う比喩、用語、学習経路、時点依存の注意をまとめています。本文を理解するために必須ではありません。</div><details class="tip-panel">
+<div class="takeaway"><strong>この章の結論</strong>「どのモデルか」だけでなく、「何を読ませ、何を実行し、どう検証し、どう改善しているか」を聞くべきです。</div></section><section id="moat"><div class="chapter-head"><div class="role-label role-practice">実践判断</div><div class="section-kicker">10 — Where Advantage Lives</div><h2>優位性はどこに宿るか</h2><p class="lede">同じ基盤モデルを誰もが借りられるなら、「賢さ」の差はモデルではなく、その外側のどこかにあるはずです。どこにあるのか、そしてそれは本当に模倣困難なのかを検討します。</p></div>
+
+
+
+<div class="thesis"><strong>この章の主張：</strong>優位性は、モデルの重みにも、Skill・プロンプトのうまさそのものにも宿りません。<mark>模倣に時間・データ・組織的な蓄積を要する資産</mark>――独自データ、評価・改善ループ、業務統合――にのみ宿ります。</div>
+
+<h3>なぜ営利企業は自前でfine-tuningしないのか</h3>
+<table>
+<thead><tr><th>理由</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>データ</td><td>行動を変えるほど高品質・大量の学習データを、業務の片手間で用意するのは難しい</td></tr>
+<tr><td>コスト</td><td>学習・評価・回帰検証は前払いの投資。RAGやSkillの修正のように即座には反映できない</td></tr>
+<tr><td>専門性</td><td>学習パイプラインの構築・評価・劣化検知には、プロンプト設計とは別のML運用スキルが要る</td></tr>
+<tr><td>動く標的</td><td>数ヶ月で基盤モデルが世代交代する。旧モデルのfine-tuningは次世代モデルへ持ち越せないことが多い</td></tr>
+<tr><td>目的との不一致</td><td>多くの「特化ニーズ」の正体は業務知識・手順の注入であり、それはRAG／Skillの得意領域であって、fine-tuningの得意領域（振る舞い・文体・分類傾向）ではない</td></tr>
+</tbody>
+</table>
+
+<h3>薄いラッパーと、厚い特化システム</h3>
+<div class="two-col">
+<div class="card">
+<h3>模倣されやすい層</h3>
+<p>プロンプト・Skillファイルそのもの。テキストである以上、観察・抽出・推測でかなり近いものが再現できます。</p>
+</div>
+<div class="card">
+<h3>模倣されにくい層</h3>
+<p>独自データ、評価・改善ループの成熟度、業務システムへの統合、利用から学ぶフィードバックの蓄積。</p>
+</div>
+</div>
+<div class="callout"><strong>優位性を見抜く質問</strong>「同じ基盤モデルに競合が明日アクセスできたとして、1ヶ月で製品の核心価値を再現できるか？」再現できてしまうなら薄いラッパー。データ・評価ループ・統合が理由で再現できないなら、そこに本当の優位性があります。</div>
+
+<h3>独自データの価値は「量」ではなく「検索精度」</h3>
+<p>コンテキストウィンドウには物理的な上限があり、どれほど大量の独自データを持っていても、その全量を一度に読ませることはできません。だからといって独自データが無意味になるわけではなく、そもそも独自データの価値は「全部を保持して使う」ことで成立したことは一度もありません。使われる仕組みは常に、<strong>巨大だが受動的な貯蔵庫と、狭いが能動的な作業領域を、検索・選別の仕組みがつなぐ</strong>という二層構造です。<sup class="ref"><a href="#src9">[9]</a></sup></p>
+<details class="tip-panel"><summary>この二層構造はLLM以前から存在する</summary><div class="details-body"><p>検索エンジンはインターネット全体を「アクティブな知識」として保持していません。巨大なインデックス（貯蔵庫）と、クエリごとに上位数件だけを選ぶランキング（検索・選別）、実際に読む検索結果ページ（作業領域）の三層です。長年の経験を持つ専門家も、案件のたびに全知識を思い出しているのではなく、関連しそうな記憶を「思い出す」選択的な想起を行っています。独自データの活用は、この構造をRAGパイプラインとして再実装しているだけです。</p></div></details>
+<p>したがって、独自データの量そのものは優位性の必要条件であっても十分条件ではありません。検索・ランキング・重複排除・鮮度判定の精度が悪ければ、無関係な文書や重複が上位に混ざり、信号密度が下がって、むしろ回答の質を下げます（<a href="#src11">Lost in the Middle</a> と同種の問題です）。優位性の実体は、データ量ではなく<strong>「今回必要な数件だけを高精度に選び出し続ける仕組みと、その仕組みを検証・改善する評価ループ」</strong>です。</p>
+
+<h3>過去の資産が効くのは「繰り返し」だけ</h3>
+<table>
+<thead><tr><th>タスクの性質</th><th>独自データ検索の有効性</th><th>効いているもの</th></tr></thead>
+<tbody>
+<tr><td>過去に類似ケースが多く存在する（よくある問い合わせ、既知の契約条項、典型的な症例）</td><td>高い</td><td>検索精度・鮮度・評価ループ</td></tr>
+<tr><td>前例のない新規ケース（新しい規制、初めての障害、未知の症例）</td><td>ほぼ無力</td><td>基盤モデルの一般的な推論能力、不確実性を検知して人間へ委ねる判断</td></tr>
+</tbody>
+</table>
+<div class="callout warn"><strong>過去の資産だけでは未来を保証できない</strong>独自データの優位性は、そのタスクの何割が既知パターンの繰り返しかに比例します。本当に新規性の高い問題では、貯蔵庫の中に検索すべき正解がそもそも存在しません。ここで効くのは蓄積ではなく、モデルの生の推論力と、「これは前例に一致しない」と正直に認識できる仕組みです。</div>
+<div class="takeaway"><strong>この章の結論</strong>優位性はモデルにもSkillの巧拙にも宿らず、模倣困難な資産（データ＋検索精度＋評価ループ＋統合）にのみ宿ります。そしてその資産すら、繰り返しパターンのタスクにしか効きません。</div></section><section class="deep-only" id="appendix"><div class="chapter-head"><div class="role-label role-appendix">補足・付録</div><div class="section-kicker">APPENDIX</div><h2>TIPSと詳細資料</h2></div><div class="support-note"><strong>ここからは主線ではありません</strong>直感を補う比喩、用語、学習経路、時点依存の注意をまとめています。本文を理解するために必須ではありません。</div><details class="tip-panel">
 <summary>人間とLLMの違いを一文で</summary>
 <div class="details-body"><p>人間は長年の経験を、注意・習慣・身体・環境フィードバックへ内在化しています。LLMは一般能力を持ちますが、今回の仕事固有の目的・状態・完成条件を外から与えた方が安定します。</p></div>
 </details>
@@ -797,6 +842,7 @@ raise MaxStepsExceeded()</code></pre>
 <div class="details-body">
 <p>モデル名、コンテキスト長、fine-tuning提供範囲、thinkingの扱い、サーバー側ツールなどは頻繁に変更されます。この文書では安定した概念を中心に整理し、製品固有の数値は必要最小限にしています。</p>
 <p>OpenAIの現行モデル最適化ページは、fine-tuningプラットフォームを新規ユーザー向けに段階的に終了すると案内しています。これは「fine-tuningという概念がなくなる」という意味ではなく、特定プラットフォームの提供状況が変化しているという意味です。<sup class="ref"><a href="#src5">[5]</a></sup></p>
+<p>本ガイドは公開後、読者との壁打ちセッションを経て2026年7月24日に「10. 優位性の所在」章を追加しました。</p>
 </div>
 </details>
 <details>

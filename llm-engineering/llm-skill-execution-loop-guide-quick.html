@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLMサービスの「賢さ」の正体を、やさしい言葉と例えだけでゆっくり掴むための軽量版ガイド。">
+<title>AIの「賢さ」って、どこから来るの? — ゆるっと理解編</title>
+<style>
+  :root {
+    --bg: #fbf6ef;
+    --bg-soft: #f3ecff;
+    --panel: #ffffff;
+    --ink: #3a352f;
+    --muted: #7c7468;
+    --line: #ece3d6;
+    --accent: #7c86e0;
+    --accent-soft: #e7e9fb;
+    --peach: #ff9d72;
+    --peach-soft: #ffe8dc;
+    --radius: 26px;
+    --duration: 700ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 8% 0%, var(--bg-soft), transparent 45%),
+      radial-gradient(circle at 95% 15%, var(--peach-soft), transparent 40%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    font-size: 1.08rem;
+    line-height: 2.05;
+    letter-spacing: 0.01em;
+  }
+
+  .wrap {
+    width: min(680px, 100% - 48px);
+    margin-inline: auto;
+  }
+
+  header.hero {
+    padding: 100px 0 70px;
+    text-align: center;
+  }
+
+  .kicker {
+    display: inline-block;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 22px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    line-height: 1.5;
+    font-weight: 800;
+    margin: 0 0 22px;
+  }
+
+  .hero p.lead {
+    color: var(--muted);
+    font-size: 1.15rem;
+    line-height: 1.9;
+    max-width: 46ch;
+    margin: 0 auto;
+  }
+
+  main { padding-bottom: 60px; }
+
+  .beat {
+    padding: 56px 0;
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity var(--duration) var(--ease), transform var(--duration) var(--ease);
+  }
+
+  .beat.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .beat .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--panel);
+    box-shadow: 0 8px 22px rgba(60, 50, 30, 0.07);
+    color: var(--accent);
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+
+  .beat h2 {
+    font-size: clamp(1.4rem, 3.4vw, 1.9rem);
+    line-height: 1.55;
+    margin: 0 0 18px;
+  }
+
+  .beat p {
+    margin: 0 0 16px;
+    max-width: 58ch;
+  }
+
+  .beat p:last-child { margin-bottom: 0; }
+
+  .analogy {
+    margin-top: 24px;
+    padding: 22px 26px;
+    background: var(--panel);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(60, 50, 30, 0.06);
+  }
+
+  .analogy .label {
+    display: block;
+    color: var(--peach);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .analogy p { margin: 0; color: var(--ink); }
+
+  .divider {
+    width: 46px;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    margin: 0 auto;
+  }
+
+  .closing {
+    text-align: center;
+    padding: 70px 0 40px;
+  }
+
+  .closing h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+
+  .closing p {
+    color: var(--muted);
+    max-width: 50ch;
+    margin: 0 auto 30px;
+  }
+
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 13px 24px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
+  }
+
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 10px 26px rgba(124, 134, 224, 0.35);
+  }
+
+  .btn.ghost {
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+
+  footer {
+    padding: 30px 0 60px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.9;
+  }
+
+  footer a { color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .beat {
+      transition: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">ゆるっと理解編</span>
+    <h1>AIの「賢さ」って、<br>どこから来るの?</h1>
+    <p class="lead">難しい言葉は、いったん脇に置いておきます。例え話だけで、ゆっくり感覚を掴んでいきましょう。</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section class="beat">
+      <span class="num">1</span>
+      <h2>AIモデルは「頭脳」というより「エンジン」</h2>
+      <p>ChatGPTやClaudeそのものは、考えて言葉を紡ぐための「エンジン」です。エンジンだけでは車として走れないように、AIモデルだけでは仕事は完結しません。</p>
+      <div class="analogy">
+        <span class="label">例えるなら</span>
+        <p>優れたエンジンを積んでいても、道を教えるナビや、ブレーキを踏む人がいなければ、目的地には着けません。「AIサービス」とは、このエンジンに道と役割を与える仕組み全体のことです。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">2</span>
+      <h2>「性格を鍛え直す」のと「毎回カンペを渡す」のは別物</h2>
+      <p>AIを特定の仕事に慣れさせる方法は、大きく2つあります。ひとつは、モデルそのものを再教育する方法（fine-tuning）。もうひとつは、モデルはそのままに、毎回必要な資料や手順書を渡す方法（Skill・RAG）です。</p>
+      <div class="analogy">
+        <span class="label">例えるなら</span>
+        <p>前者は「その人の性格・くせを長期研修で作り替える」こと。後者は「本人は変えずに、毎回分厚いカンペと資料を手渡す」こと。どちらも「詳しくなる」けれど、中身の仕組みはまったく違います。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">3</span>
+      <h2>ほとんどの会社が、モデルを鍛え直さない理由</h2>
+      <p>性格を作り替える研修（fine-tuning）には、大量の練習台と、お金と、専門のトレーナーが必要です。しかも数ヶ月後には、もっと優秀な新人（次世代モデル）が入ってきて、せっかくの研修が意味をなさなくなることもあります。</p>
+      <p>だから多くの会社は、性格を変えるより「よくできたカンペ」を用意する方を選びます。実はそれで十分なことがほとんどなのです。</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">4</span>
+      <h2>Skillは「物知りにする」道具じゃない</h2>
+      <p>Skill（手順書）を渡す目的は、AIを物知りにすることではありません。AIが「あれ、どうすればいいんだっけ」と迷いやすい場所だけを、あらかじめ決めておいてあげることです。</p>
+      <div class="analogy">
+        <span class="label">例えるなら</span>
+        <p>新人に百科事典を渡すより、「ここで迷ったらこう判断してね」という一枚のチェックリストを渡す方が、ずっと安定して動けます。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">5</span>
+      <h2>「実行するかどうか」を決めるのは、AIの外側にいる監督</h2>
+      <p>AIは「次に何をすべきか」を提案するのが得意です。でも、実際にボタンを押す・何回までやり直すか・いつ止めるかは、AIの外側にいる普通のプログラム（監督役）が握っています。</p>
+      <div class="analogy">
+        <span class="label">例えるなら</span>
+        <p>AIが「これを送りましょう」と提案しても、実際に送信ボタンを押すのは監督役。暴走しそうになったら、監督役が止めます。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">6</span>
+      <h2>「資料の多さ」より「探し出す上手さ」</h2>
+      <p>会社の独自データをたくさん持っていても、AIが一度に読める量には限りがあります。だから大事なのは、資料の量そのものより、「今必要な数枚だけを的確に探し出す」上手さです。</p>
+      <div class="analogy">
+        <span class="label">例えるなら</span>
+        <p>本が何万冊もある図書館でも、探し方が下手な司書がいたら意味がありません。少ない蔵書でも、的確に一冊を差し出せる司書の方が頼りになります。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="beat">
+      <span class="num">7</span>
+      <h2>過去のデータは「よくあること」には強いけれど</h2>
+      <p>会社に蓄積された過去の記録は、「前にもあったパターン」にはとても強い味方になります。でも、まったく初めて起きることには、参照できる過去がそもそも存在しません。</p>
+      <p>そんなときに頼りになるのは、蓄積された資料ではなく、AI自身の地力の推論と、「これは分からない」と正直に言える誠実さです。</p>
+    </section>
+
+  </div>
+</main>
+
+<div class="closing">
+  <div class="wrap">
+    <h2>まとめると</h2>
+    <p>AIの賢さは、モデル単体ではなく、「何を渡し」「どう実行させ」「どう確かめるか」という周りの仕組みから生まれます。もっとじっくり読みたくなったら、詳細ガイドへどうぞ。</p>
+    <div class="btn-row">
+      <a class="btn primary" href="llm-skill-execution-loop-guide.html">詳細ガイドを読む</a>
+      <a class="btn ghost" href="./">カテゴリ一覧へ戻る</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>本ページは個人の学習ノートであり、特定企業・製品の公式見解ではありません。</p>
+    <p><a href="../">pages トップへ</a></p>
+  </div>
+</footer>
+
+<script>
+  const beats = document.querySelectorAll('.beat');
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (prefersReduced || !('IntersectionObserver' in window)) {
+    beats.forEach((el) => el.classList.add('is-visible'));
+  } else {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    beats.forEach((el) => observer.observe(el));
+  }
+</script>
+
+</body>
+</html>
