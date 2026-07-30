@@ -10,6 +10,7 @@
 |----------|------|
 | [`adobe-analytics/`](adobe-analytics/) | Adobe Analytics のセグメント機構に関する学習資料（[n0r1h0/Segment](https://github.com/n0r1h0/Segment) より移植） |
 | [`llm-engineering/`](llm-engineering/) | LLM サービス・エージェントの内部構造（Skill 実行、RAG、実行ループなど） |
+| [`privacy-consent/`](privacy-consent/) | Cookie / GDPR / ePrivacy の論点整理と、Adobe Web SDK の同意設計・Google Consent Mode の cookieless ping との比較 |
 
 ## 構成方針
 

@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="cookieless・ePrivacy・GDPR の論点を分離して整理し、Adobe Web SDK の同意設計（defaultConsent / setConsent / ECID）と Google Consent Mode の cookieless ping を比較する学習ノート。" />
+  <title>Cookie / Consent / GDPR / ePrivacy / Adobe 設計ガイド</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111936;
+      --panel2:#0f1730;
+      --text:#eaf0ff;
+      --muted:#b8c3e0;
+      --accent:#76a9ff;
+      --accent2:#7ee0c8;
+      --warn:#ffd36e;
+      --danger:#ff8f8f;
+      --line:rgba(255,255,255,.10);
+      --shadow:0 18px 40px rgba(0,0,0,.28);
+      --radius:20px;
+      --radius2:14px;
+      --max:1120px;
+      --code:#0a0f22;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:
+      radial-gradient(1200px 600px at 20% 0%, rgba(118,169,255,.20), transparent 55%),
+      radial-gradient(900px 500px at 100% 15%, rgba(126,224,200,.14), transparent 45%),
+      linear-gradient(180deg, #08101f 0%, #0b1020 100%);
+      color:var(--text);
+      font-family: Inter, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height:1.8;
+      letter-spacing:.01em;
+    }
+    a{color:var(--accent)}
+    a:hover, a:focus-visible{color:var(--accent2)}
+    .wrap{max-width:var(--max); margin:0 auto; padding:36px 22px 60px;}
+    .backlink{display:inline-flex; align-items:center; gap:6px; font-size:.88rem; color:var(--muted); text-decoration:none; margin-bottom:18px}
+    .backlink:hover{color:var(--accent2)}
+    .hero{
+      background:linear-gradient(180deg, rgba(17,25,54,.95), rgba(13,19,40,.92));
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:34px;
+      box-shadow:var(--shadow);
+    }
+    .kicker{color:var(--accent2); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.82rem}
+    h1{margin:.25rem 0 0; font-size:clamp(2rem, 4vw, 3.4rem); line-height:1.15}
+    .lede{max-width:920px; font-size:1.08rem; color:var(--muted); margin:18px 0 0}
+    .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
+    .pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-size:.92rem;
+    }
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px; margin-top:22px}
+    .card{
+      background:linear-gradient(180deg, rgba(17,25,54,.95), rgba(13,19,40,.92));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-7{grid-column:span 7}
+    .span-6{grid-column:span 6}
+    .span-5{grid-column:span 5}
+    .span-4{grid-column:span 4}
+    .span-3{grid-column:span 3}
+    h2{margin:0 0 12px; font-size:1.5rem; line-height:1.25}
+    h3{margin:0 0 10px; font-size:1.08rem}
+    p{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .callout{
+      border-radius:18px; padding:16px 18px; margin:14px 0;
+      background:rgba(118,169,255,.10); border:1px solid rgba(118,169,255,.28);
+    }
+    .callout.warn{background:rgba(255,211,110,.10); border-color:rgba(255,211,110,.28)}
+    .callout.danger{background:rgba(255,143,143,.10); border-color:rgba(255,143,143,.28)}
+    .callout.ok{background:rgba(126,224,200,.10); border-color:rgba(126,224,200,.28)}
+    ul{margin:8px 0 0 18px; padding:0}
+    li{margin:7px 0}
+    .tablewrap{overflow:auto; border-radius:18px; border:1px solid var(--line)}
+    table{width:100%; border-collapse:collapse; min-width:860px; background:rgba(7,11,22,.45)}
+    th,td{padding:14px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+    th{text-align:left; background:rgba(255,255,255,.04); color:#fff; font-size:.95rem}
+    td{color:var(--text)}
+    tr:last-child td{border-bottom:none}
+    .tag{
+      display:inline-block; font-size:.8rem; font-weight:700;
+      padding:4px 10px; border-radius:999px; margin-right:8px;
+      background:rgba(255,255,255,.08); color:#fff;
+      border:1px solid var(--line);
+    }
+    .tag.blue{background:rgba(118,169,255,.16)}
+    .tag.green{background:rgba(126,224,200,.16)}
+    .tag.yellow{background:rgba(255,211,110,.16)}
+    .tag.red{background:rgba(255,143,143,.16)}
+    .quote{
+      font-size:1.06rem;
+      border-left:4px solid var(--accent);
+      padding:4px 0 4px 16px;
+      color:#f5f7ff;
+      margin:12px 0 6px;
+    }
+    code, pre{
+      background:var(--code);
+      border:1px solid var(--line);
+      border-radius:14px;
+      color:#dfe8ff;
+    }
+    pre{
+      padding:16px;
+      overflow:auto;
+      white-space:pre-wrap;
+      margin:10px 0 0;
+      line-height:1.6;
+    }
+    code{padding:2px 6px}
+    .step{
+      display:flex; gap:14px; align-items:flex-start;
+      padding:14px 0; border-top:1px dashed rgba(255,255,255,.10);
+    }
+    .step:first-child{border-top:none; padding-top:0}
+    .num{
+      flex:0 0 auto; width:34px; height:34px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(118,169,255,.18); border:1px solid rgba(118,169,255,.3);
+      font-weight:800;
+    }
+    .footer{
+      color:var(--muted); font-size:.92rem; margin-top:18px;
+      padding:18px 4px 0;
+    }
+    .small{font-size:.92rem}
+    .source-list li{margin:10px 0}
+    .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    .stack{display:grid; gap:16px}
+    @media (max-width: 920px){
+      .span-8,.span-7,.span-6,.span-5,.span-4,.span-3{grid-column:span 12}
+      .two-col{grid-template-columns:1fr}
+      .hero{padding:24px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="backlink" href="../index.html">← pages トップへ</a>
+
+    <section class="hero">
+      <div class="kicker">Privacy / Consent — Adobe &amp; Google 比較ノート</div>
+      <h1>Cookie、GDPR、ePrivacy、Adobeの関係を<br>仕様定義できる粒度まで整理する</h1>
+      <p class="lede">
+        この資料は、「cookieless なら大丈夫」という単純化を避け、<strong>何が端末保存の論点か</strong>、<strong>何が個人データ処理の論点か</strong>、<strong>Adobe側でどこまで制御できるか</strong>を分けて読めるように再構成した学習ノートです。
+        比較対象として Google Consent Mode の cookieless ping も扱い、「cookieless」という同じ言葉が指す実装の幅を具体例で示します。
+      </p>
+      <div class="meta">
+        <span class="pill">対象: Web / Analytics / Personalization / Consent</span>
+        <span class="pill">軸: 法務 × 実装 × 運用</span>
+        <span class="pill">結論: Cookie有無だけでは決まらない</span>
+        <span class="pill">注: 法的助言ではない</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card span-12">
+        <h2>まず押さえるべき全体像</h2>
+        <div class="two-col">
+          <div class="callout ok">
+            <p class="quote">cookie の有無は「入口」の論点。</p>
+            <p class="small">ePrivacy は、端末への保存・アクセスを中心に見ます。cookie を使わない設計でも、他の識別子や端末アクセスがあれば別途論点が残ります。</p>
+          </div>
+          <div class="callout">
+            <p class="quote">GDPR は「処理するデータ」の論点。</p>
+            <p class="small">IP、User-Agent、URL、ECID、CRM ID、イベントIDなど、個人データになり得るものが処理されれば、法的根拠・透明性・保存期間・第三者提供などを別に検討します。</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <p class="quote">cookieless = GDPR準拠、ではありません。</p>
+          <p class="small">Cookieを書かなくても、データ送信や相関処理の設計次第で、GDPRの適用は普通に残ります。逆に、cookie を使っていても、用途・情報量・法的根拠が整理されていれば実務上成立する場合があります。</p>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>1. cookieless とは何か</h2>
+        <p>cookieless は「Cookieを使わない」ことを意味しますが、実装としては少なくとも次の4パターンがあります。</p>
+        <ul>
+          <li><strong>保存しない</strong>: 端末にIDを残さず、都度のイベントだけ送る。</li>
+          <li><strong>保存するがCookie以外</strong>: LocalStorage などを使う。</li>
+          <li><strong>Server-sideで識別する</strong>: URLやIP、ヘッダ、リクエストIDを手掛かりにする。</li>
+          <li><strong>匿名っぽく見せる</strong>: 実際には相関可能性が残る設計。</li>
+        </ul>
+        <div class="callout">
+          <p><strong>読み替えのコツ</strong></p>
+          <p class="small">技術用語としての cookieless は、法的に「同意不要」を意味しません。評価対象は、保存される情報、送信される情報、相関可能性、目的の4点です。</p>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>2. GDPR とは何か</h2>
+        <p>GDPR は <strong>個人データの処理</strong> を規律します。cookie そのものではなく、個人データに該当する情報を、どの目的で、どの法的根拠で、どの範囲まで処理するかを見ます。</p>
+        <ul>
+          <li>法的根拠: 同意、契約、法的義務、重要な利益、公的任務、正当利益。</li>
+          <li>重要論点: 透明性、目的限定、データ最小化、保存制限、第三者提供、越境移転。</li>
+          <li>consent は「自由意思・特定・十分な情報・明確な同意」が必要。</li>
+        </ul>
+        <div class="callout danger">
+          <p class="small"><strong>注意</strong>: 「ポリシーでそう書いたから GDPR OK」ではありません。文言ではなく、実データフローが決まります。</p>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>コラム: Google Consent Mode の「cookieless ping」 — cookieless の実装例</h2>
+        <p>「cookieless」を実装レベルで理解する具体例として、<strong>Google Consent Mode</strong>(Google Ads / GA4)の <strong>cookieless ping</strong> を見ておきます。Adobe とは別ベンダーの仕組みですが、cookieless の実装パターンの幅を示す好例です。</p>
+        <div class="two-col">
+          <div class="callout">
+            <p><strong>仕組み</strong></p>
+            <p class="small">ユーザーが同意を拒否した状態では、タグは Cookie を保存・参照せず、代わりに軽量な「cookieless ping」をサーバーへ送信します。ping にはタイムスタンプ・User-Agent・Referrer といったブラウザが受動的に付与するヘッダー情報や、広告クリック情報の有無、同意状態を表すブール値、ページロードごとのランダム値など、<strong>個人を特定しない粗粒度の情報のみ</strong>が含まれます。</p>
+          </div>
+          <div class="callout ok">
+            <p><strong>目的</strong></p>
+            <p class="small">Google はこの ping 群を用いて、同意を拒否したユーザー分のデータギャップを <strong>モデリング(behavioral modeling)</strong> で補完し、コンバージョン等の指標を推定します。同意が得られた時点で、Cookie ベースの通常計測に切り替わります。</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <p class="small"><strong>Adobe との違い</strong>: これは「Cookie を送らない = 何も送らない」ではなく、「個人を特定しない情報だけを送り、統計的に補完する」という設計です。Adobe Web SDK の <code>defaultConsent: "pending"</code>(データをローカル保存し送信しない)とは設計思想が異なる点に注意してください。</p>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>3. ePrivacy とは何か</h2>
+        <p>ePrivacy は、端末への保存または端末からのアクセスを中心に扱います。実務では、cookie、LocalStorage、セキュリティトークン、端末内の類似技術が対象候補になります。</p>
+        <ul>
+          <li>原則: ユーザーの端末機器への保存・アクセスは同意が必要。</li>
+          <li>例外: サービス提供に不可欠なもの、ユーザー明示要求に必要なものなど。</li>
+          <li>位置づけ: GDPR と競合するのではなく、前段の「端末側のルール」。</li>
+        </ul>
+        <div class="callout warn">
+          <p class="small"><strong>要点</strong>: ePrivacy を外れても GDPR は残り得ます。逆も同様です。</p>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>4. 3つの関係を一枚で見る</h2>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>論点</th>
+                <th>cookieless</th>
+                <th>ePrivacy</th>
+                <th>GDPR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>対象</td>
+                <td>技術の選択</td>
+                <td>端末保存・アクセス</td>
+                <td>個人データ処理</td>
+              </tr>
+              <tr>
+                <td>同意の要否</td>
+                <td>自動では決まらない</td>
+                <td>原則要る</td>
+                <td>法的根拠により決まる</td>
+              </tr>
+              <tr>
+                <td>評価ポイント</td>
+                <td>保存しないか、識別しないか</td>
+                <td>端末への書き込み・読み出し</td>
+                <td>識別可能性、目的、相関性、保存期間</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted" style="margin-top:10px">技術と法規制のレイヤーが違うため、仕様は両方に対して作る必要があります。</p>
+      </article>
+
+      <article class="card span-12">
+        <h2>5. Adobe の技術はどこで効くのか</h2>
+        <p>Adobe では、<strong>Web SDK / Edge / ECID / Analytics / Target / Privacy Service</strong> の組み合わせで、同意前後のデータ収集を設計できます。重要なのは、<em>何を止めるか</em>、<em>何を残すか</em>、<em>どのタイミングで開始するか</em> を明文化することです。</p>
+
+        <div class="grid" style="margin-top:8px">
+          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+            <h3><span class="tag blue">Web SDK</span> defaultConsent / setConsent</h3>
+            <p class="small">defaultConsent は、同意確定前の扱いを決める起点です。`in` / `out` / `pending` の3値で制御し、`setConsent` は同意が変わったときに送信されます。</p>
+            <p class="small">設計上は、「初回ロード時に何を送らないか」「同意確定後に何を開始するか」を分けて決めます。</p>
+          </div>
+          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+            <h3><span class="tag green">Identity</span> ECID / consent</h3>
+            <p class="small">同意と ID は密接に関連しています。Web SDK は同意の状態に応じて ECID の生成や ID Cookie の設定、Edge Network への送信タイミングに影響します。</p>
+            <p class="small">同意が確定する前に ECID を作るかどうかは、仕様の中核です。</p>
+          </div>
+          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+            <h3><span class="tag yellow">Analytics</span> 計測と識別</h3>
+            <p class="small">Analytics は計測目的の処理ですが、一般に訪問者識別や継続計測の設計が含まれます。Cookie を止めても、イベントの粒度や送信項目次第で個人データ性は残り得ます。</p>
+          </div>
+          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+            <h3><span class="tag red">Target</span> パーソナライズ</h3>
+            <p class="small">Target はテストやオファー配信のために cookie を使う構成があり、マーケティング/パーソナライズの同意論点が強くなりやすい領域です。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>6. Adobe Web SDK の同意設計で見える事実</h2>
+        <div class="stack">
+          <div class="step">
+            <div class="num">1</div>
+            <div>
+              <h3>defaultConsent は「同意前の既定値」</h3>
+              <p class="small">`defaultConsent` は `setConsent` を呼ぶ前の収集挙動を決めます。値は `in` / `out` / `pending` のみで、設定しない場合は `in` です。<strong>ページごとに再設定が必要</strong>で、ページロード間で永続しません。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">2</div>
+            <div>
+              <h3>setConsent は同意確定後の状態を反映</h3>
+              <p class="small">`setConsent` は、同意が変更されたときにのみサーバー呼び出しを行い、Web SDK 内にユーザーの同意状態を保持します。Adobe は同意ダイアログの状態を別途保存することを推奨しています。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">3</div>
+            <div>
+              <h3>ECID と consent は連動する</h3>
+              <p class="small">同意と ID は密接に関連し、Web SDK が ECID を生成し、ID Cookie を設定し、Edge に送信するタイミングに影響します。つまり、<strong>「同意をどう判定するか」</strong>ではなく、<strong>「どの時点で ID を作るか」</strong>まで仕様化する必要があります。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="num">4</div>
+            <div>
+              <h3>Privacy Service は運用面の別レイヤー</h3>
+              <p class="small">Adobe の Privacy Service は、収集済みデータに対する削除やエクスポート等のプライバシー要求を扱う運用基盤です。これは consent 設計の代替ではなく、別のコンプライアンス機能です。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>7. 顧客と決めるべき仕様項目</h2>
+        <p>「同意が必要かどうか」だけを聞くと議論が止まります。実務では、次のように分解すると決まりやすくなります。</p>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>決めること</th>
+                <th>Adobe 側での主な影響</th>
+                <th>判断を誤ったときのリスク</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>目的</td>
+                <td>必須計測 / 分析 / パーソナライズ / 広告</td>
+                <td>送信イベント、宛先、タグ発火条件</td>
+                <td>目的外利用、同意範囲の不整合</td>
+              </tr>
+              <tr>
+                <td>同意粒度</td>
+                <td>全部同意 / カテゴリ別 / ベンダー別</td>
+                <td>defaultConsent / setConsent / CMP連携</td>
+                <td>同意前に意図せず送信</td>
+              </tr>
+              <tr>
+                <td>保存</td>
+                <td>Cookie / その他ストレージ / 保存しない</td>
+                <td>ECID、Target、同意状態の保持</td>
+                <td>ePrivacy 対応漏れ</td>
+              </tr>
+              <tr>
+                <td>識別</td>
+                <td>匿名 / 擬似匿名 / 既存ID連携</td>
+                <td>IDマップ、ECID、CRM連携</td>
+                <td>個人データ性の見落とし</td>
+              </tr>
+              <tr>
+                <td>開始タイミング</td>
+                <td>初回ロード時 / 同意後 / 一部先行</td>
+                <td>タグ発火順、sendEvent、setConsent</td>
+                <td>同意前送信</td>
+              </tr>
+              <tr>
+                <td>保存期間</td>
+                <td>何日保持するか</td>
+                <td>cookie expiry / retention / downstream</td>
+                <td>保存制限違反</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>8. 典型パターン</h2>
+        <div class="callout ok">
+          <p><strong>パターン A: 同意後に全部開始</strong></p>
+          <p class="small">EU など consent 要件が強い地域で、初回ロードでは `pending` または `out` にしておき、同意後に ECID / Analytics / Target を開始する。</p>
+        </div>
+        <div class="callout">
+          <p><strong>パターン B: 必須計測のみ先行</strong></p>
+          <p class="small">必須の運用指標だけ先に取り、広告・パーソナライズは同意後に開始する。項目分離が甘いと、結局すべて止まる。</p>
+        </div>
+        <div class="callout warn">
+          <p><strong>パターン C: cookieless風だが識別可能</strong></p>
+          <p class="small">cookie は使わなくても、IP・UA・URL・リクエストIDで相関できるなら、GDPR 上の評価は残る。ここを「匿名化」と言い切るのは危険。</p>
+        </div>
+        <div class="callout">
+          <p><strong>パターン D: cookieless ping + モデリング(Google型)</strong></p>
+          <p class="small">同意拒否時は個人を特定しない粗粒度 ping のみ送信し、統計モデリングで補完する。データ量は減るが完全な計測停止にはしない設計。</p>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>9. 実務判断のフレーム</h2>
+        <div class="step">
+          <div class="num">A</div>
+          <div>
+            <h3>端末に何か書くか</h3>
+            <p class="small">書くなら ePrivacy の論点。cookie 以外の保存先も含めて確認。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">B</div>
+          <div>
+            <h3>個人データか</h3>
+            <p class="small">IP、ID、行動ログ、URL、デバイス情報が相関可能なら GDPR の論点。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">C</div>
+          <div>
+            <h3>何を根拠に処理するか</h3>
+            <p class="small">同意か、正当利益か、必要性か。カテゴリごとに分けて判断。</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>10. そのまま使える仕様テンプレート</h2>
+        <div class="grid" style="margin-top:8px">
+          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+            <h3>データカテゴリ</h3>
+            <p class="small">必須 / 分析 / パーソナライズ / 広告 / セキュリティ</p>
+          </div>
+          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+            <h3>収集開始条件</h3>
+            <p class="small">初回表示 / 同意取得後 / 例外条件 / 地域判定</p>
+          </div>
+          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+            <h3>保存方針</h3>
+            <p class="small">cookie / server-side / no persistence / expiry</p>
+          </div>
+        </div>
+        <pre>
+【例】
+- EU訪問者の初回表示時: defaultConsent = pending
+- 同意未確定: Analytics/Target/ID生成を開始しない
+- 同意取得後: setConsent 実行、ECID生成、許可済みソリューションのみ開始
+- 同意撤回時: out へ変更、以後の送信停止、既存データの削除要求は Privacy Service で処理
+        </pre>
+      </article>
+
+      <article class="card span-12">
+        <h2>11. まとめ</h2>
+        <div class="callout ok">
+          <p class="quote">結論はシンプルです。</p>
+          <ul>
+            <li><strong>cookieless</strong> は技術の選択であって、法的結論ではない。同じ「cookieless」でも、Adobe の <code>pending</code>(未確定なら送信・保存しない)と Google の cookieless ping(個人特定不可情報のみ送りモデリングで補完する)は設計思想が異なる。</li>
+            <li><strong>ePrivacy</strong> は端末への保存・アクセスを見る。</li>
+            <li><strong>GDPR</strong> は個人データ処理を見る。</li>
+            <li><strong>Adobe</strong> は同意前後の挙動をかなり細かく設計できるが、どのデータをいつ止めるかは顧客要件として確定する必要がある。</li>
+          </ul>
+        </div>
+        <div class="callout warn">
+          <p class="small"><strong>実務の一言</strong>: 「同意が必要か」ではなく、「何をどの順番で、どこまで処理するか」を先に決めると、法務・マーケ・実装が揃いやすくなります。</p>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>参考にした一次情報</h2>
+        <p class="muted small">以下は本資料の根拠として参照した公式情報です。本文はこれらをベースに、個人の学習ノートとして再構成しています。</p>
+        <ol class="source-list">
+          <li>EU GDPR 本文 / Recital 30 / Article 4, 6, 7: EUR-Lex の Regulation (EU) 2016/679</li>
+          <li>EU ePrivacy Directive Article 5(3): EUR-Lex の Directive 2002/58/EC</li>
+          <li>EDPB Guidelines 05/2020 on consent under GDPR</li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/configure/defaultconsent" target="_blank" rel="noopener">Adobe Experience Platform Web SDK: defaultConsent</a></li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/setconsent" target="_blank" rel="noopener">Adobe Experience Platform Web SDK: setConsent</a></li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/landing/governance-privacy-security/consent/sdk" target="_blank" rel="noopener">Process Customer Consent Data Using the Adobe Experience Platform Web SDK</a></li>
+          <li>Adobe Experience Cloud / Target cookie documentation</li>
+          <li><a href="https://support.google.com/google-ads/answer/10000067?hl=en" target="_blank" rel="noopener">About consent mode (cookieless pings) — Google Ads Help</a></li>
+          <li><a href="https://www.cookieyes.com/knowledge-base/google-consent-mode/what-is-cookieless-pings/" target="_blank" rel="noopener">What is cookieless pings? — CookieYes</a></li>
+        </ol>
+      </article>
+    </section>
+
+    <div class="footer">
+      <p>本資料は個人による学習・共有目的のコンテンツであり、Adobe Inc. および Google LLC の公式見解・サポート文書ではありません。記載内容の正確性・完全性・将来にわたる妥当性を保証するものではなく、法的助言でもありません。Cookie / GDPR / ePrivacy 対応や Adobe・Google の各製品設定に関する判断は、必ず各社の公式ドキュメント・ご利用契約、および貴社の法務・DPO の助言に従ってください。</p>
+      <p><a href="../index.html">← pages トップへ戻る</a></p>
+    </div>
+  </div>
+</body>
+</html>
