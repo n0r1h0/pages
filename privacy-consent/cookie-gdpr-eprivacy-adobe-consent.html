@@ -7,63 +7,77 @@
   <title>Cookie / Consent / GDPR / ePrivacy / Adobe 設計ガイド</title>
   <style>
     :root{
-      --bg:#0b1020;
-      --panel:#111936;
-      --panel2:#0f1730;
-      --text:#eaf0ff;
-      --muted:#b8c3e0;
-      --accent:#76a9ff;
-      --accent2:#7ee0c8;
-      --warn:#ffd36e;
-      --danger:#ff8f8f;
-      --line:rgba(255,255,255,.10);
-      --shadow:0 18px 40px rgba(0,0,0,.28);
+      --ink:#1b1b1b;
+      --ink-soft:#4a4a4a;
+      --muted:#7a7a7a;
+      --line:#e4e0d8;
+      --paper:#faf8f4;
+      --surface:#ffffff;
+      --accent:#b3401f;
+      --accent-hover:#8a2f18;
+      --accent-soft:#f4e3da;
+      --blue-bg:#e7edf2;
+      --blue-fg:#3d5a73;
+      --green-bg:#e8f0e4;
+      --green-fg:#4f7a52;
+      --amber-bg:#f6ead2;
+      --amber-fg:#9c6b1f;
+      --font-display: "Iowan Old Style", "Georgia", "Hiragino Mincho ProN", serif;
+      --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      --shadow:0 18px 40px rgba(27,27,27,.08);
+      --shadow-hover:0 18px 40px rgba(27,27,27,.14);
       --radius:20px;
       --radius2:14px;
       --max:1120px;
-      --code:#0a0f22;
+      --duration:220ms;
+      --ease:cubic-bezier(0.16, 1, 0.3, 1);
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:
-      radial-gradient(1200px 600px at 20% 0%, rgba(118,169,255,.20), transparent 55%),
-      radial-gradient(900px 500px at 100% 15%, rgba(126,224,200,.14), transparent 45%),
-      linear-gradient(180deg, #08101f 0%, #0b1020 100%);
-      color:var(--text);
-      font-family: Inter, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    html{scroll-behavior:smooth}
+    html,body{margin:0;padding:0;
+      background:var(--paper);
+      color:var(--ink);
+      font-family:var(--font-body);
       line-height:1.8;
       letter-spacing:.01em;
     }
     a{color:var(--accent)}
-    a:hover, a:focus-visible{color:var(--accent2)}
+    a:hover, a:focus-visible{color:var(--accent-hover)}
     .wrap{max-width:var(--max); margin:0 auto; padding:36px 22px 60px;}
     .backlink{display:inline-flex; align-items:center; gap:6px; font-size:.88rem; color:var(--muted); text-decoration:none; margin-bottom:18px}
-    .backlink:hover{color:var(--accent2)}
+    .backlink:hover{color:var(--accent)}
     .hero{
-      background:linear-gradient(180deg, rgba(17,25,54,.95), rgba(13,19,40,.92));
+      background:var(--surface);
       border:1px solid var(--line);
       border-radius:28px;
       padding:34px;
       box-shadow:var(--shadow);
     }
-    .kicker{color:var(--accent2); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.82rem}
-    h1{margin:.25rem 0 0; font-size:clamp(2rem, 4vw, 3.4rem); line-height:1.15}
-    .lede{max-width:920px; font-size:1.08rem; color:var(--muted); margin:18px 0 0}
+    .kicker{color:var(--accent); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.82rem}
+    h1{font-family:var(--font-display); font-weight:500; margin:.25rem 0 0; font-size:clamp(2rem, 4vw, 3.4rem); line-height:1.15; color:var(--ink)}
+    .lede{max-width:920px; font-size:1.08rem; color:var(--ink-soft); margin:18px 0 0}
     .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
     .pill{
       padding:8px 12px;
       border-radius:999px;
-      background:rgba(255,255,255,.06);
+      background:var(--paper);
       border:1px solid var(--line);
-      color:var(--text);
+      color:var(--ink);
       font-size:.92rem;
     }
     .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px; margin-top:22px}
     .card{
-      background:linear-gradient(180deg, rgba(17,25,54,.95), rgba(13,19,40,.92));
+      background:var(--surface);
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:22px;
       box-shadow:var(--shadow);
+      transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease), border-color var(--duration) var(--ease);
+    }
+    .card:hover, .card:focus-within{
+      transform:translateY(-3px);
+      box-shadow:var(--shadow-hover);
+      border-color:var(--accent-soft);
     }
     .span-12{grid-column:span 12}
     .span-8{grid-column:span 8}
@@ -72,47 +86,48 @@
     .span-5{grid-column:span 5}
     .span-4{grid-column:span 4}
     .span-3{grid-column:span 3}
-    h2{margin:0 0 12px; font-size:1.5rem; line-height:1.25}
-    h3{margin:0 0 10px; font-size:1.08rem}
+    h2{font-family:var(--font-display); font-weight:500; margin:0 0 12px; font-size:1.5rem; line-height:1.25; color:var(--ink)}
+    h3{margin:0 0 10px; font-size:1.08rem; color:var(--ink)}
     p{margin:0 0 12px}
     .muted{color:var(--muted)}
     .callout{
       border-radius:18px; padding:16px 18px; margin:14px 0;
-      background:rgba(118,169,255,.10); border:1px solid rgba(118,169,255,.28);
+      background:var(--blue-bg); border:1px solid rgba(61,90,115,.24);
+      color:var(--ink);
     }
-    .callout.warn{background:rgba(255,211,110,.10); border-color:rgba(255,211,110,.28)}
-    .callout.danger{background:rgba(255,143,143,.10); border-color:rgba(255,143,143,.28)}
-    .callout.ok{background:rgba(126,224,200,.10); border-color:rgba(126,224,200,.28)}
+    .callout.warn{background:var(--amber-bg); border-color:rgba(156,107,31,.3)}
+    .callout.danger{background:var(--accent-soft); border-color:rgba(179,64,31,.3)}
+    .callout.ok{background:var(--green-bg); border-color:rgba(79,122,82,.3)}
     ul{margin:8px 0 0 18px; padding:0}
     li{margin:7px 0}
     .tablewrap{overflow:auto; border-radius:18px; border:1px solid var(--line)}
-    table{width:100%; border-collapse:collapse; min-width:860px; background:rgba(7,11,22,.45)}
+    table{width:100%; border-collapse:collapse; min-width:860px; background:var(--surface)}
     th,td{padding:14px 14px; border-bottom:1px solid var(--line); vertical-align:top}
-    th{text-align:left; background:rgba(255,255,255,.04); color:#fff; font-size:.95rem}
-    td{color:var(--text)}
+    th{text-align:left; background:var(--paper); color:var(--ink); font-size:.95rem}
+    td{color:var(--ink)}
     tr:last-child td{border-bottom:none}
     .tag{
       display:inline-block; font-size:.8rem; font-weight:700;
       padding:4px 10px; border-radius:999px; margin-right:8px;
-      background:rgba(255,255,255,.08); color:#fff;
+      background:var(--paper); color:var(--ink);
       border:1px solid var(--line);
     }
-    .tag.blue{background:rgba(118,169,255,.16)}
-    .tag.green{background:rgba(126,224,200,.16)}
-    .tag.yellow{background:rgba(255,211,110,.16)}
-    .tag.red{background:rgba(255,143,143,.16)}
+    .tag.blue{background:var(--blue-bg); color:var(--blue-fg); border-color:transparent}
+    .tag.green{background:var(--green-bg); color:var(--green-fg); border-color:transparent}
+    .tag.yellow{background:var(--amber-bg); color:var(--amber-fg); border-color:transparent}
+    .tag.red{background:var(--accent-soft); color:var(--accent); border-color:transparent}
     .quote{
       font-size:1.06rem;
       border-left:4px solid var(--accent);
       padding:4px 0 4px 16px;
-      color:#f5f7ff;
+      color:var(--ink);
       margin:12px 0 6px;
     }
     code, pre{
-      background:var(--code);
+      background:#2a2420;
       border:1px solid var(--line);
       border-radius:14px;
-      color:#dfe8ff;
+      color:#f3ece2;
     }
     pre{
       padding:16px;
@@ -124,18 +139,19 @@
     code{padding:2px 6px}
     .step{
       display:flex; gap:14px; align-items:flex-start;
-      padding:14px 0; border-top:1px dashed rgba(255,255,255,.10);
+      padding:14px 0; border-top:1px dashed var(--line);
     }
     .step:first-child{border-top:none; padding-top:0}
     .num{
       flex:0 0 auto; width:34px; height:34px; border-radius:50%;
       display:flex; align-items:center; justify-content:center;
-      background:rgba(118,169,255,.18); border:1px solid rgba(118,169,255,.3);
-      font-weight:800;
+      background:var(--accent-soft); border:1px solid rgba(179,64,31,.3);
+      font-weight:800; color:var(--accent);
     }
     .footer{
       color:var(--muted); font-size:.92rem; margin-top:18px;
       padding:18px 4px 0;
+      border-top:1px solid var(--line);
     }
     .small{font-size:.92rem}
     .source-list li{margin:10px 0}
@@ -287,21 +303,21 @@
         <p>Adobe では、<strong>Web SDK / Edge / ECID / Analytics / Target / Privacy Service</strong> の組み合わせで、同意前後のデータ収集を設計できます。重要なのは、<em>何を止めるか</em>、<em>何を残すか</em>、<em>どのタイミングで開始するか</em> を明文化することです。</p>
 
         <div class="grid" style="margin-top:8px">
-          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+          <div class="card span-6" style="background:var(--paper)">
             <h3><span class="tag blue">Web SDK</span> defaultConsent / setConsent</h3>
             <p class="small">defaultConsent は、同意確定前の扱いを決める起点です。`in` / `out` / `pending` の3値で制御し、`setConsent` は同意が変わったときに送信されます。</p>
             <p class="small">設計上は、「初回ロード時に何を送らないか」「同意確定後に何を開始するか」を分けて決めます。</p>
           </div>
-          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+          <div class="card span-6" style="background:var(--paper)">
             <h3><span class="tag green">Identity</span> ECID / consent</h3>
             <p class="small">同意と ID は密接に関連しています。Web SDK は同意の状態に応じて ECID の生成や ID Cookie の設定、Edge Network への送信タイミングに影響します。</p>
             <p class="small">同意が確定する前に ECID を作るかどうかは、仕様の中核です。</p>
           </div>
-          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+          <div class="card span-6" style="background:var(--paper)">
             <h3><span class="tag yellow">Analytics</span> 計測と識別</h3>
             <p class="small">Analytics は計測目的の処理ですが、一般に訪問者識別や継続計測の設計が含まれます。Cookie を止めても、イベントの粒度や送信項目次第で個人データ性は残り得ます。</p>
           </div>
-          <div class="card span-6" style="background:rgba(255,255,255,.03)">
+          <div class="card span-6" style="background:var(--paper)">
             <h3><span class="tag red">Target</span> パーソナライズ</h3>
             <p class="small">Target はテストやオファー配信のために cookie を使う構成があり、マーケティング/パーソナライズの同意論点が強くなりやすい領域です。</p>
           </div>
@@ -446,15 +462,15 @@
       <article class="card span-12">
         <h2>10. そのまま使える仕様テンプレート</h2>
         <div class="grid" style="margin-top:8px">
-          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+          <div class="card span-4" style="background:var(--paper)">
             <h3>データカテゴリ</h3>
             <p class="small">必須 / 分析 / パーソナライズ / 広告 / セキュリティ</p>
           </div>
-          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+          <div class="card span-4" style="background:var(--paper)">
             <h3>収集開始条件</h3>
             <p class="small">初回表示 / 同意取得後 / 例外条件 / 地域判定</p>
           </div>
-          <div class="card span-4" style="background:rgba(255,255,255,.03)">
+          <div class="card span-4" style="background:var(--paper)">
             <h3>保存方針</h3>
             <p class="small">cookie / server-side / no persistence / expiry</p>
           </div>
