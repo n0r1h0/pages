@@ -369,7 +369,7 @@
 </header>
 <div class="layout">
 <aside>
-<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. 実行ループ</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><a href="#moat">10. 優位性の所在</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
+<nav aria-label="目次" class="toc"><p class="toc-title">Contents</p><p class="toc-heading">Start</p><a href="#overview">0. 一本のメッセージ</a><p class="toc-heading">Main Story</p><a href="#model-system">1. モデルとサービス</a><a href="#skill">2. Skill</a><a href="#context">3. 重み・文脈・RAG</a><a href="#loop">4. LoopとHarness</a><a href="#nested">5. レイヤー化されたループ</a><a href="#chatgpt">6. ChatGPTの具体例</a><a href="#prepared-generated">7. 用意済みと動的生成</a><p class="toc-heading">Apply</p><a href="#design">8. 設計原則</a><a href="#vendor">9. サービス評価</a><a href="#moat">10. 優位性の所在</a><p class="toc-heading">Optional</p><a class="toc-tip" href="#appendix">TIPS / Appendix</a><a class="toc-appendix" href="#sources">参考資料</a></nav>
 </aside>
 <main><section id="overview"><div class="chapter-head"><div class="role-label role-main">メインメッセージ</div><div class="section-kicker">START — Mental Model</div><h2>最初に掴む、一本のメッセージ</h2><p class="lede">LLMは「思考と言語のエンジン」です。AIサービスは、そのエンジンへ必要な情報を渡し、現実の道具を使わせ、結果を検証するシステムです。</p></div>
 
@@ -380,7 +380,7 @@
 <div class="layer"><div class="layer-label">② Context / 文脈</div><div>今回の依頼、会話履歴、資料、システム指示、ツール定義など、その呼び出しで読ませる情報。</div></div>
 <div class="layer"><div class="layer-label">③ Skill / 手順</div><div>何を優先し、どの順で進め、何を完成とみなすかを定義する再利用可能な業務手順。</div></div>
 <div class="layer"><div class="layer-label">④ RAG &amp; Tools</div><div>外部の最新・固有情報を取得し、検索、計算、コード実行、業務操作などを行う能力。</div></div>
-<div class="layer"><div class="layer-label">⑤ Loop / Harness</div><div>モデルを呼ぶ、ツールを実行する、結果を戻す、検証し再試行する外側の制御プログラム。</div></div>
+<div class="layer"><div class="layer-label">⑤ Loop / Harness</div><div>モデルを呼ぶ、ツールを実行する、結果を戻す、検証し再試行する動き（Loop）と、それを支える権限・データ・メモリの管理（Harness）。</div></div>
 <div class="layer"><div class="layer-label">⑥ Evals / 品質管理</div><div>正解率、引用、形式、失敗率、コスト、速度を測り、改善を続ける仕組み。</div></div>
 </div>
 
@@ -621,10 +621,25 @@
 </table>
 <p>Anthropicの公式ドキュメントも、システムプロンプト、メッセージ、ツール結果、画像、文書、ツール定義、生成出力とthinkingがコンテキストに数えられ、キャッシュされた入力もウィンドウを占めると説明しています。<sup class="ref"><a href="#src7">[7]</a></sup></p>
 <div class="callout good"><strong>良い設計</strong>全Skill・全資料・全ツールを毎回渡さず、短いメタデータから必要なものだけ選び、必要な部分だけ読み、作業済みの巨大な結果は構造化して外へ保存します。</div>
-<details class="tip-panel"><summary>コンテキストが大きいなら、全部入れてもよい？</summary><div class="details-body"><p><strong>いいえ。</strong>上限内でも、無関係な情報が増えるほど信号密度が下がります。全Skill・全ツール・全資料を常時投入せず、必要なものを遅延読み込みする設計が有効です。</p><p>また、プロンプトキャッシュは再計算や料金を減らしても、通常はコンテキスト占有そのものを減らしません。</p></div></details><div class="takeaway"><strong>この章の結論</strong>Fine-tuningは重みに寄せる手段。Skill・RAG・プロンプトは、その呼び出しで読む材料です。後者は有限なので、選択と編集が必要です。</div></section><section id="loop"><div class="chapter-head"><div class="role-label role-build">仕組み・実装</div><div class="section-kicker">04 — Execution Loop</div><h2>実行ループはプロンプトではなく、外側のプログラム</h2><p class="lede">プロンプトは「どう判断するか」。ループは「モデルを再び呼ぶ」「ツールを本当に実行する」「止める」を担当します。</p></div>
+<details class="tip-panel"><summary>コンテキストが大きいなら、全部入れてもよい？</summary><div class="details-body"><p><strong>いいえ。</strong>上限内でも、無関係な情報が増えるほど信号密度が下がります。全Skill・全ツール・全資料を常時投入せず、必要なものを遅延読み込みする設計が有効です。</p><p>また、プロンプトキャッシュは再計算や料金を減らしても、通常はコンテキスト占有そのものを減らしません。</p></div></details><div class="takeaway"><strong>この章の結論</strong>Fine-tuningは重みに寄せる手段。Skill・RAG・プロンプトは、その呼び出しで読む材料です。後者は有限なので、選択と編集が必要です。</div></section><section id="loop"><div class="chapter-head"><div class="role-label role-build">仕組み・実装</div><div class="section-kicker">04 — Loop &amp; Harness</div><h2>実行ループはプロンプトではなく、外側のプログラム</h2><p class="lede">プロンプトは「どう判断するか」。その判断を実際に繰り返し、安全に完了まで運ぶのは、<strong>Loop</strong>と<strong>Harness</strong>という二つの言葉に分けて理解できる、モデルの外側の仕組みです。</p></div>
 
 
 
+<div class="thesis"><strong>掴みやすいポイント：</strong>Loopは<mark>判断・実行・検証を回し続け、目的を達成するまで前へ進める運動</mark>。Harnessは<mark>その運動が逸脱しないよう、読み書きするデータ・許す操作・使わせるツール・持ち越す記憶・止めどきを外側から統制する装置</mark>です。Loopが「進み方」を、Harnessが「進んでよい範囲」を決める、と捉えると区別しやすくなります。</div>
+<div class="two-col">
+<div class="card">
+<h3>Loop — 進み続ける運動</h3>
+<p>判断する、実行する、結果を確かめる――この三拍子を、目的を達成するまで回し続ける動き。</p>
+<p class="micro">モデルを再び呼び出し、ツールに実行させ、結果を新しい材料として戻し、完成条件を確かめる。その一巡が単位になる。</p>
+</div>
+<div class="card">
+<h3>Harness — 進んでよい範囲を決める基盤</h3>
+<p>Loopが暴走せず、許されていない操作にまで踏み出さないよう、モデルの外側からその実行環境を統制する仕組み。</p>
+<p class="micro">扱ってよいデータ、与える権限、使わせるツール、持ち越す記憶、止めどきを、あらかじめコードとして決めておく。</p>
+</div>
+</div>
+<p>Loopだけでは、際限のない繰り返しや、許可されていない操作の実行を止める術がありません。Harnessだけでは、状況に応じて次の一手を選び、前へ進める判断力が生まれません。実際のAIサービスは、この二つを重ねて初めて、柔軟に、かつ暴走せずに動きます。以降に出てくる各要素も、「Loopが担う進み方の話か」「Harnessが担う統制の話か」で切り分けて読むと、位置づけがつかみやすくなります。</p>
+<h3>Loopの詳細：一巡の動き</h3>
 <div class="flow">
 <div class="step"><b>1. モデルを呼ぶ</b>依頼＋指示＋ツール定義</div><span class="arrow">→</span>
 <div class="step"><b>2. 行動を選ぶ</b>回答またはツール要求</div><span class="arrow">→</span>
@@ -661,6 +676,19 @@ raise MaxStepsExceeded()</code></pre>
 </div>
 </div>
 <p>OpenAI Agents SDKのRunnerは、最終出力が出るまで、ハンドオフやツール実行を含むループを管理します。<sup class="ref"><a href="#src3">[3]</a></sup> Anthropicも、クライアントツールではClaudeが構造化された呼び出しを返し、アプリケーションが実行する構造を説明しています。<sup class="ref"><a href="#src8">[8]</a></sup></p>
+<p>固定ワークフローかエージェントループかは、「誰がLoopの経路を選ぶか」の違いにすぎません。どちらの形でも、その経路が安全に・予算内で・正しい相手にだけ実行されることを保証するのはHarnessの役目です。ここからは、そのHarnessが具体的に何を管理しているかを見ていきます。</p>
+<h3>Harnessの詳細：5つの管理対象</h3>
+<table>
+<thead><tr><th>管理対象</th><th>何を管理するか</th><th>具体例</th></tr></thead>
+<tbody>
+<tr><td>データ</td><td>会話履歴・取得文書・ツール結果の受け渡しと整理</td><td>RAGの検索結果、長い出力の要約・保存</td></tr>
+<tr><td>権限</td><td>どの操作を、誰が、どこまで実行できるか</td><td>送信・購入・削除の前に承認を要求</td></tr>
+<tr><td>ツール</td><td>利用可能な行動の定義と、実際の実行</td><td>検索、コード実行、DB操作、ファイル操作</td></tr>
+<tr><td>メモリ</td><td>何を次の呼び出しへ持ち越し、何を捨てるか</td><td>会話の圧縮、外部ストレージへの状態保存</td></tr>
+<tr><td>ガバナンス</td><td>停止条件・コスト・ログをどう縛るか</td><td>最大試行回数、タイムアウト、監査ログ</td></tr>
+</tbody>
+</table>
+<p>この5つはいずれも、プロンプトの文章だけでは確実に守らせることができません。「必ず3回まで」と書いても、モデルがそれを忠実に数えて止まる保証はなく、忘れる・誤解する・言い換えるといった揺れが起こり得ます。だからこそ、これらはHarness側の決定的なコードとして実装します。次の表は、その振り分けを実際の判断項目ごとに示したものです。</p>
 <h3>Skill／プロンプトとコードの境界</h3>
 <table>
 <thead><tr><th>制御内容</th><th>置く場所</th><th>理由</th></tr></thead>
@@ -675,20 +703,21 @@ raise MaxStepsExceeded()</code></pre>
 </tbody>
 </table>
 <div class="thesis"><strong>原則：</strong>曖昧な意味判断はLLMへ。確実に守らせたい制御はプログラムへ。</div>
-<details class="tip-panel"><summary>「必要なら何度も検索して」と書くだけでループになる？</summary><div class="details-body"><p>なりません。プロンプトは検索を選ぶ方針を与えられますが、モデルを再呼び出しし、検索を実行し、結果を戻すのは外側のハーネスです。文章だけのプロンプトは、現実の反復処理を保証できません。</p></div></details><div class="takeaway"><strong>この章の結論</strong>モデルは「次に何をするか」を柔軟に選び、プログラムは「実際に行う・制限する・止める」を確実に管理します。</div></section><section id="nested"><div class="chapter-head"><div class="role-label role-build">仕組み・実装</div><div class="section-kicker">05 — Layered Loops</div><h2>提供側のループの上に、さらにループを作る意味</h2><p class="lede">有効です。ただし、同じ目的の自己批評を二重化するのではなく、異なる粒度と責任を持つループを重ねる場合に限ります。</p></div>
+<details class="tip-panel"><summary>「必要なら何度も検索して」と書くだけでループになる？</summary><div class="details-body"><p>なりません。プロンプトは検索を選ぶ方針を与えられますが、モデルを再呼び出しし、検索を実行し、結果を戻すのは外側のハーネスです。文章だけのプロンプトは、現実の反復処理を保証できません。</p></div></details><div class="takeaway"><strong>この章の結論</strong>Loopは判断・実行・検証を回し続ける運動、Harnessはその運動が踏み外さないよう、データ・権限・ツール・メモリ・ガバナンスを統制する基盤です。次の章では、この二つが重なったとき——Loopが入れ子になったとき——Harnessの責任がどう分割されるかを見ます。</div></section><section id="nested"><div class="chapter-head"><div class="role-label role-build">仕組み・実装</div><div class="section-kicker">05 — Layered Loops</div><h2>提供側のループの上に、さらにループを作る意味</h2><p class="lede">有効です。ただし、同じ目的の自己批評を二重化するのではなく、異なる粒度と責任を持つループを重ねる場合に限ります。</p></div>
 
 
 
+<p>前章の言葉で言えば、これは同じLoopを何重にも重ねる話ではありません。<strong>粒度が異なる複数のLoopに、それぞれ別のHarnessが責任を持つ</strong>という話です。内側のループも外側のループも、判断・実行・検証を回すという同じ形をしていますが、それぞれを支えるHarnessが統制するデータ・権限・ツール・メモリ・ガバナンスの範囲が異なります。</p>
 <div class="two-col">
 <div class="card">
 <h3>内側のループ</h3>
 <p>一つの調査や生成を完了するため、検索、ツール利用、再検討を行う。</p>
-<p class="micro">モデル提供者やAgent SDKが管理することもある。</p>
+<p class="micro">モデル提供者やAgent SDKのHarnessが管理することもある。</p>
 </div>
 <div class="card">
 <h3>外側のループ</h3>
 <p>業務全体の工程、検証、承認、再試行、保存、エスカレーションを管理する。</p>
-<p class="micro">アプリケーション提供者の責任領域。</p>
+<p class="micro">アプリケーション提供者が実装するHarnessの責任領域。</p>
 </div>
 </div>
 <div class="flow">
@@ -707,7 +736,7 @@ raise MaxStepsExceeded()</code></pre>
 <h3>無駄になりやすい二重ループ</h3>
 <div class="callout warn"><strong>「完璧になるまで自己批評して書き直す」</strong>内側と外側が同じ曖昧な基準で批評を続けると、言い換えの反復、過剰な無難化、コスト増、終了不能、コンテキスト肥大化が起きます。</div>
 <p>外側の再試行を行うなら、同じ入力で祈るのではなく、<strong>明確な不合格理由、追加情報、テスト結果、変更された制約</strong>を次の試行へ渡す必要があります。</p>
-<div class="takeaway"><strong>この章の結論</strong>ループを重ねる価値は、反省回数を増やすことではなく、タスク内の探索と業務全体の保証を別責任に分けることにあります。</div></section><section id="chatgpt"><div class="chapter-head"><div class="role-label role-main">具体例</div><div class="section-kicker">06 — ChatGPT as a System</div><h2>ChatGPTはモデル単体ではなく、実行基盤を含むサービス</h2><p class="lede">このセッションではシステム情報上、私はGPT-5.6 Thinkingとして応答しています。ただし、ChatGPT内部のソースコード、正確なルーティング、非公開のモデル構成を私は観測できません。</p></div>
+<div class="takeaway"><strong>この章の結論</strong>ループを重ねる価値は、反省回数を増やすことではなく、タスク内の探索と業務全体の保証という、異なる粒度のHarness責任に分けることにあります。</div></section><section id="chatgpt"><div class="chapter-head"><div class="role-label role-main">具体例</div><div class="section-kicker">06 — ChatGPT as a System</div><h2>ChatGPTはモデル単体ではなく、実行基盤を含むサービス</h2><p class="lede">このセッションではシステム情報上、私はGPT-5.6 Thinkingとして応答しています。ただし、ChatGPT内部のソースコード、正確なルーティング、非公開のモデル構成を私は観測できません。</p></div>
 
 
 
