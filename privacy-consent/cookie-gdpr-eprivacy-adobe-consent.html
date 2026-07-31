@@ -219,11 +219,11 @@
 
       <article class="card span-6">
         <h2>2. GDPR とは何か</h2>
-        <p>GDPR は <strong>個人データの処理</strong> を規律します。cookie そのものではなく、個人データに該当する情報を、どの目的で、どの法的根拠で、どの範囲まで処理するかを見ます。</p>
+        <p><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng" target="_blank" rel="noopener">GDPR</a> は <strong>個人データの処理</strong> を規律します。cookie そのものではなく、個人データに該当する情報を、どの目的で、どの法的根拠で、どの範囲まで処理するかを見ます。</p>
         <ul>
           <li>法的根拠: 同意、契約、法的義務、重要な利益、公的任務、正当利益。</li>
           <li>重要論点: 透明性、目的限定、データ最小化、保存制限、第三者提供、越境移転。</li>
-          <li>consent は「自由意思・特定・十分な情報・明確な同意」が必要。</li>
+          <li><a href="https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-052020-consent-under-regulation-2016679_en" target="_blank" rel="noopener">consent</a> は「自由意思・特定・十分な情報・明確な同意」が必要。</li>
         </ul>
         <div class="callout danger">
           <p class="small"><strong>注意</strong>: 「ポリシーでそう書いたから GDPR OK」ではありません。文言ではなく、実データフローが決まります。</p>
@@ -232,25 +232,100 @@
 
       <article class="card span-12">
         <h2>コラム: Google Consent Mode の「cookieless ping」 — cookieless の実装例</h2>
-        <p>「cookieless」を実装レベルで理解する具体例として、<strong>Google Consent Mode</strong>(Google Ads / GA4)の <strong>cookieless ping</strong> を見ておきます。Adobe とは別ベンダーの仕組みですが、cookieless の実装パターンの幅を示す好例です。</p>
+        <p>「cookieless」を実装レベルで理解する具体例として、<strong>Google Consent Mode</strong>(Google Ads / GA4)の <a href="https://support.google.com/google-ads/answer/10000067?hl=en" target="_blank" rel="noopener"><strong>cookieless ping</strong></a> を見ておきます。Adobe とは別ベンダーの仕組みですが、<a href="https://www.cookieyes.com/knowledge-base/google-consent-mode/what-is-cookieless-pings/" target="_blank" rel="noopener">cookieless の実装パターンの幅</a>を示す好例です。</p>
         <div class="two-col">
           <div class="callout">
             <p><strong>仕組み</strong></p>
-            <p class="small">ユーザーが同意を拒否した状態では、タグは Cookie を保存・参照せず、代わりに軽量な「cookieless ping」をサーバーへ送信します。ping にはタイムスタンプ・User-Agent・Referrer といったブラウザが受動的に付与するヘッダー情報や、広告クリック情報の有無、同意状態を表すブール値、ページロードごとのランダム値など、<strong>個人を特定しない粗粒度の情報のみ</strong>が含まれます。</p>
+            <p class="small">ユーザーが同意を拒否した状態では、タグは Cookie を保存・参照せず、代わりに軽量な「cookieless ping」をサーバーへ送信します。ping にはタイムスタンプ・User-Agent・Referrer といったブラウザが受動的に付与するヘッダー情報や、広告クリック情報の有無、同意状態を表すブール値、ページロードごとのランダム値など、<strong>個人を特定しない粗粒度の情報のみ</strong>が含まれます。<a href="https://services.google.com/fh/files/misc/consent_mode_overview.pdf" target="_blank" rel="noopener">(Consent Mode Overview)</a></p>
           </div>
           <div class="callout ok">
             <p><strong>目的</strong></p>
-            <p class="small">Google はこの ping 群を用いて、同意を拒否したユーザー分のデータギャップを <strong>モデリング(behavioral modeling)</strong> で補完し、コンバージョン等の指標を推定します。同意が得られた時点で、Cookie ベースの通常計測に切り替わります。</p>
+            <p class="small">Google はこの ping 群を用いて、同意を拒否したユーザー分のデータギャップを <a href="https://support.google.com/analytics/answer/11161109?hl=en" target="_blank" rel="noopener"><strong>モデリング(behavioral modeling)</strong></a> で補完し、コンバージョン等の指標を推定します。同意が得られた時点で、Cookie ベースの通常計測に切り替わります。</p>
           </div>
         </div>
         <div class="callout warn">
           <p class="small"><strong>Adobe との違い</strong>: これは「Cookie を送らない = 何も送らない」ではなく、「個人を特定しない情報だけを送り、統計的に補完する」という設計です。Adobe Web SDK の <code>defaultConsent: "pending"</code>(データをローカル保存し送信しない)とは設計思想が異なる点に注意してください。</p>
         </div>
+
+        <h3>cookieless ping は「完全匿名」なのか</h3>
+        <p class="small">結論としては、<strong>「識別子が一切ない」わけではないが、永続的なユーザー識別子(Cookie ID や Client ID)は使わない</strong>という設計です。UA や IP など通信上必要な情報は送られますが、それらをユーザー識別子として保存・追跡する設計にはなっていません。</p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>cookieless ping での扱い</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>GA Cookie(<code>_ga</code>)</td><td>読まない・書かない</td></tr>
+              <tr><td>Google Ads Cookie</td><td>読まない・書かない</td></tr>
+              <tr><td>Client ID</td><td>基本なし</td></tr>
+              <tr><td>Session ID</td><td>Cookie 由来のものはなし</td></tr>
+              <tr><td>User ID(広告主側が明示送信する場合)</td><td>送れば送られる(実装依存)</td></tr>
+              <tr><td>User-Agent</td><td>HTTP 通信として送信される</td></tr>
+              <tr><td>IP アドレス</td><td>通信上は送信されるが、GA4 は保存・ログしない仕様</td></tr>
+              <tr><td>画面解像度・タイムスタンプ・URL/Referrer</td><td>送信される</td></tr>
+              <tr><td>ページロードごとのランダム値</td><td>送信されることがある(下記参照)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="two-col">
+          <div class="callout">
+            <p><strong>IP や UA で個人を代替識別しているのか</strong></p>
+            <p class="small">Google 公式の<a href="https://support.google.com/analytics/answer/13802165" target="_blank" rel="noopener">ドキュメント</a>は cookieless ping を "anonymized and non-identifiable Google Analytics events" と説明しています。UA・IP・画面解像度は HTTP 通信上含まれるものの、<strong>これらをユーザー識別子として保存・追跡する設計ではありません</strong>。GA4 については「IP アドレスを保存・ログしない」とも明記されています。</p>
+          </div>
+          <div class="callout">
+            <p><strong>ページロードごとのランダム値は永続IDか</strong></p>
+            <p class="small"><a href="https://services.google.com/fh/files/misc/consent_mode_overview.pdf" target="_blank" rel="noopener">Google の資料</a>には "random number generated on each page load" という記載があります。これは<strong>ページロード単位の一時的な値</strong>であり、<code>_ga</code> Cookie の Client ID のように日をまたいで同一ユーザーを指し続ける永続 ID ではありません。<a href="https://storage.googleapis.com/arxiv-dataset/arxiv/arxiv/pdf/2312/2312.08806v6.pdf" target="_blank" rel="noopener">第三者による通信解析</a>でも、この値が Client ID の代替として継続利用されるものではないと報告されています。</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <p class="small"><strong>整理</strong>: 「識別子は UA や IP で代替している」という理解は不正確です。正確には「<strong>永続的な識別子は使わず、UA や IP などの最低限の通信情報とイベント情報を入力として、<a href="https://support.google.com/analytics/answer/11161109?hl=en" target="_blank" rel="noopener">Behavioral Modeling / Conversion Modeling</a> で欠損データを統計的に補完する</strong>」という設計です。ただし実装側(広告主)が <code>user_id</code> 等のカスタム識別子を明示的に送信すれば、それは通常どおり送信されるため、「実装次第で完全匿名ではなくなり得る」点には注意が必要です。</p>
+        </div>
+      </article>
+
+      <article class="card span-12">
+        <h2>コラム: 同じ発想を Adobe Analytics / CJA で実装できるか</h2>
+        <p>Google の cookieless ping(識別子なしで粗粒度イベントを送り、モデリングでギャップを補完する設計)を、Adobe Analytics や Customer Journey Analytics(CJA)で再現できるか整理します。結論は<strong>「ネイティブ機能としては存在しない」</strong>です。<a href="https://experienceleaguecommunities.adobe.com/t5/adobe-analytics-questions/consent-mode-in-adobe-analytics/m-p/586106" target="_blank" rel="noopener">Adobe コミュニティ</a>でも同様の見解が示されています。</p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th>Adobe(Web SDK / AA / CJA)での実態</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>defaultConsent</code>/<code>setConsent</code> が <code>out</code></td><td>データは一切送信されない(Google の「送るが粗粒度」とは異なり「送らない」の一択)。<a href="https://experienceleague.adobe.com/en/docs/platform-learn/implement-web-sdk/consent-management/setup-consent" target="_blank" rel="noopener">Set up consent with Platform Web SDK</a></td></tr>
+              <tr><td>同意状態そのもの</td><td>同意・拒否に関わらず、同意状態を記憶するための最小 Cookie(<code>kndctr_&lt;orgId&gt;_consent</code>)は書き込まれる</td></tr>
+              <tr><td>同意が <code>in</code>・未確定時</td><td>Edge Network が ECID を自動生成しファーストパーティ Cookie に保存。ECID は基本的に永続識別子で、Google の ping(使い捨て値中心)とは設計思想が逆。<a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/identity/overview" target="_blank" rel="noopener">Identity data in the Web SDK</a></td></tr>
+              <tr><td>レガシー AppMeasurement のフォールバック</td><td>Cookie を書けない場合、<strong>IP + User-Agent のハッシュ</strong>、または <code>s_fid</code> 代替 Cookie で同一訪問者を追跡し続ける仕組みが存在。<a href="https://marketing.adobe.com/resources/help/en_US/sc/implement/visid_fallback.html" target="_blank" rel="noopener">Unique visitors(Visitor ID フォールバック仕様)</a></td></tr>
+              <tr><td>Conversion Modeling 相当機能</td><td>Adobe Analytics / CJA にネイティブな同等機能はなし(<a href="https://experienceleaguecommunities.adobe.com/t5/adobe-analytics-questions/consent-mode-in-adobe-analytics/m-p/586106" target="_blank" rel="noopener">Adobe コミュニティ</a>も同じ結論)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout danger">
+          <p class="small"><strong>注意すべき逆行パターン</strong>: レガシーのフォールバック(IP+UA ハッシュ)は「Cookie を使わない」という意味では cookieless ですが、実質的には準永続的なフィンガープリンティングであり、Google が意図的に避けている「識別子として保存・追跡しない」設計とは正反対です。本資料の結論(cookieless ≠ GDPR 準拠、評価対象は識別可能性)がそのまま当てはまる、望ましくない実装例といえます。</p>
+        </div>
+        <div class="two-col">
+          <div class="callout">
+            <p><strong>選択肢 A: Adobe 標準のまま運用する</strong></p>
+            <p class="small">同意が <code>out</code>/<code>pending</code> の間は送信ゼロとする。追加のエンジニアリングは不要だが、Google のようなギャップ補完は一切行われない。多くの実務ではこちらが現実的な落としどころ。</p>
+          </div>
+          <div class="callout warn">
+            <p><strong>選択肢 B: 匿名イベントストリームを自前で構築する</strong></p>
+            <p class="small">ECID や identityMap を含めない粗粒度イベント(タイムスタンプ・ページカテゴリ・デバイス種別・リファラードメイン程度)を、CJA の<a href="https://experienceleague.adobe.com/en/docs/customer-journey-analytics-learn/tutorials/visitor-id/configure-missing-person-id" target="_blank" rel="noopener">「Person ID が欠落したデータセット」の仕組み</a>を使って別データセットとして取り込み、自社の統計モデル(同意コホートとの比率補正など)でギャップを補完する。Adobe 純正機能ではなく完全にカスタム実装。</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <p class="small"><strong>選択肢 B を実装する場合の制約</strong>: (1) Analytics の標準指標(訪問回数・ユニークビジター等)は visitor ID(ECID)前提の集計のため、匿名イベントを標準指標に混ぜることはできず、CJA で別データセットとして扱う必要がある。(2) IP・UA・画面解像度など高エントロピー情報を組み合わせると、それ自体がデバイスフィンガープリンティング(=識別子)化しうるため、フィールドの粒度を意図的に落とす設計が必須。(3) Google の Conversion Modeling は Google 内部の ML モデルであり、同等の補完モデルは自社データサイエンス側で構築する必要がある。</p>
+        </div>
       </article>
 
       <article class="card span-6">
         <h2>3. ePrivacy とは何か</h2>
-        <p>ePrivacy は、端末への保存または端末からのアクセスを中心に扱います。実務では、cookie、LocalStorage、セキュリティトークン、端末内の類似技術が対象候補になります。</p>
+        <p><a href="https://eur-lex.europa.eu/eli/dir/2002/58/oj/eng" target="_blank" rel="noopener">ePrivacy</a> は、端末への保存または端末からのアクセスを中心に扱います。実務では、cookie、LocalStorage、セキュリティトークン、端末内の類似技術が対象候補になります。</p>
         <ul>
           <li>原則: ユーザーの端末機器への保存・アクセスは同意が必要。</li>
           <li>例外: サービス提供に不可欠なもの、ユーザー明示要求に必要なものなど。</li>
@@ -304,12 +379,12 @@
 
         <div class="grid" style="margin-top:8px">
           <div class="card span-6" style="background:var(--paper)">
-            <h3><span class="tag blue">Web SDK</span> defaultConsent / setConsent</h3>
+            <h3><span class="tag blue">Web SDK</span> <a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/configure/defaultconsent" target="_blank" rel="noopener">defaultConsent</a> / <a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/setconsent" target="_blank" rel="noopener">setConsent</a></h3>
             <p class="small">defaultConsent は、同意確定前の扱いを決める起点です。`in` / `out` / `pending` の3値で制御し、`setConsent` は同意が変わったときに送信されます。</p>
             <p class="small">設計上は、「初回ロード時に何を送らないか」「同意確定後に何を開始するか」を分けて決めます。</p>
           </div>
           <div class="card span-6" style="background:var(--paper)">
-            <h3><span class="tag green">Identity</span> ECID / consent</h3>
+            <h3><span class="tag green">Identity</span> <a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/identity/overview" target="_blank" rel="noopener">ECID / consent</a></h3>
             <p class="small">同意と ID は密接に関連しています。Web SDK は同意の状態に応じて ECID の生成や ID Cookie の設定、Edge Network への送信タイミングに影響します。</p>
             <p class="small">同意が確定する前に ECID を作るかどうかは、仕様の中核です。</p>
           </div>
@@ -318,7 +393,7 @@
             <p class="small">Analytics は計測目的の処理ですが、一般に訪問者識別や継続計測の設計が含まれます。Cookie を止めても、イベントの粒度や送信項目次第で個人データ性は残り得ます。</p>
           </div>
           <div class="card span-6" style="background:var(--paper)">
-            <h3><span class="tag red">Target</span> パーソナライズ</h3>
+            <h3><span class="tag red"><a href="https://experienceleague.adobe.com/en/docs/core-services/interface/data-collection/cookies/target" target="_blank" rel="noopener">Target</a></span> パーソナライズ</h3>
             <p class="small">Target はテストやオファー配信のために cookie を使う構成があり、マーケティング/パーソナライズの同意論点が強くなりやすい領域です。</p>
           </div>
         </div>
@@ -330,28 +405,28 @@
           <div class="step">
             <div class="num">1</div>
             <div>
-              <h3>defaultConsent は「同意前の既定値」</h3>
+              <h3><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/configure/defaultconsent" target="_blank" rel="noopener">defaultConsent</a> は「同意前の既定値」</h3>
               <p class="small">`defaultConsent` は `setConsent` を呼ぶ前の収集挙動を決めます。値は `in` / `out` / `pending` のみで、設定しない場合は `in` です。<strong>ページごとに再設定が必要</strong>で、ページロード間で永続しません。</p>
             </div>
           </div>
           <div class="step">
             <div class="num">2</div>
             <div>
-              <h3>setConsent は同意確定後の状態を反映</h3>
-              <p class="small">`setConsent` は、同意が変更されたときにのみサーバー呼び出しを行い、Web SDK 内にユーザーの同意状態を保持します。Adobe は同意ダイアログの状態を別途保存することを推奨しています。</p>
+              <h3><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/setconsent" target="_blank" rel="noopener">setConsent</a> は同意確定後の状態を反映</h3>
+              <p class="small">`setConsent` は、同意が変更されたときにのみサーバー呼び出しを行い、Web SDK 内にユーザーの同意状態を保持します。<a href="https://experienceleague.adobe.com/en/docs/experience-platform/landing/governance-privacy-security/consent/sdk" target="_blank" rel="noopener">Adobe は同意ダイアログの状態を別途保存すること</a>を推奨しています。</p>
             </div>
           </div>
           <div class="step">
             <div class="num">3</div>
             <div>
-              <h3>ECID と consent は連動する</h3>
+              <h3><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/identity/overview" target="_blank" rel="noopener">ECID と consent</a> は連動する</h3>
               <p class="small">同意と ID は密接に関連し、Web SDK が ECID を生成し、ID Cookie を設定し、Edge に送信するタイミングに影響します。つまり、<strong>「同意をどう判定するか」</strong>ではなく、<strong>「どの時点で ID を作るか」</strong>まで仕様化する必要があります。</p>
             </div>
           </div>
           <div class="step">
             <div class="num">4</div>
             <div>
-              <h3>Privacy Service は運用面の別レイヤー</h3>
+              <h3><a href="https://experienceleague.adobe.com/en/docs/experience-platform/privacy/home" target="_blank" rel="noopener">Privacy Service</a> は運用面の別レイヤー</h3>
               <p class="small">Adobe の Privacy Service は、収集済みデータに対する削除やエクスポート等のプライバシー要求を扱う運用基盤です。これは consent 設計の代替ではなく、別のコンプライアンス機能です。</p>
             </div>
           </div>
@@ -426,10 +501,10 @@
         </div>
         <div class="callout warn">
           <p><strong>パターン C: cookieless風だが識別可能</strong></p>
-          <p class="small">cookie は使わなくても、IP・UA・URL・リクエストIDで相関できるなら、GDPR 上の評価は残る。ここを「匿名化」と言い切るのは危険。</p>
+          <p class="small">cookie は使わなくても、IP・UA・URL・リクエストIDで相関できるなら、<a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng" target="_blank" rel="noopener">GDPR</a> 上の評価は残る。ここを「匿名化」と言い切るのは危険(Adobe レガシーの<a href="https://marketing.adobe.com/resources/help/en_US/sc/implement/visid_fallback.html" target="_blank" rel="noopener">IP+UA フォールバック</a>が典型例)。</p>
         </div>
         <div class="callout">
-          <p><strong>パターン D: cookieless ping + モデリング(Google型)</strong></p>
+          <p><strong>パターン D: <a href="https://support.google.com/google-ads/answer/10000067?hl=en" target="_blank" rel="noopener">cookieless ping</a> + <a href="https://support.google.com/analytics/answer/11161109?hl=en" target="_blank" rel="noopener">モデリング</a>(Google型)</strong></p>
           <p class="small">同意拒否時は個人を特定しない粗粒度 ping のみ送信し、統計モデリングで補完する。データ量は減るが完全な計測停止にはしない設計。</p>
         </div>
       </article>
@@ -489,10 +564,10 @@
         <div class="callout ok">
           <p class="quote">結論はシンプルです。</p>
           <ul>
-            <li><strong>cookieless</strong> は技術の選択であって、法的結論ではない。同じ「cookieless」でも、Adobe の <code>pending</code>(未確定なら送信・保存しない)と Google の cookieless ping(個人特定不可情報のみ送りモデリングで補完する)は設計思想が異なる。</li>
-            <li><strong>ePrivacy</strong> は端末への保存・アクセスを見る。</li>
-            <li><strong>GDPR</strong> は個人データ処理を見る。</li>
-            <li><strong>Adobe</strong> は同意前後の挙動をかなり細かく設計できるが、どのデータをいつ止めるかは顧客要件として確定する必要がある。</li>
+            <li><strong>cookieless</strong> は技術の選択であって、法的結論ではない。同じ「cookieless」でも、Adobe の <a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/configure/defaultconsent" target="_blank" rel="noopener"><code>pending</code></a>(未確定なら送信・保存しない)と <a href="https://support.google.com/google-ads/answer/10000067?hl=en" target="_blank" rel="noopener">Google の cookieless ping</a>(個人特定不可情報のみ送りモデリングで補完する)は設計思想が異なる。</li>
+            <li><strong>ePrivacy</strong> は<a href="https://eur-lex.europa.eu/eli/dir/2002/58/oj/eng" target="_blank" rel="noopener">端末への保存・アクセス</a>を見る。</li>
+            <li><strong>GDPR</strong> は<a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng" target="_blank" rel="noopener">個人データ処理</a>を見る。</li>
+            <li><strong>Adobe</strong> は<a href="https://experienceleague.adobe.com/en/docs/experience-platform/privacy/home" target="_blank" rel="noopener">同意前後の挙動</a>をかなり細かく設計できるが、どのデータをいつ止めるかは顧客要件として確定する必要がある。</li>
           </ul>
         </div>
         <div class="callout warn">
@@ -504,15 +579,24 @@
         <h2>参考にした一次情報</h2>
         <p class="muted small">以下は本資料の根拠として参照した公式情報です。本文はこれらをベースに、個人の学習ノートとして再構成しています。</p>
         <ol class="source-list">
-          <li>EU GDPR 本文 / Recital 30 / Article 4, 6, 7: EUR-Lex の Regulation (EU) 2016/679</li>
-          <li>EU ePrivacy Directive Article 5(3): EUR-Lex の Directive 2002/58/EC</li>
-          <li>EDPB Guidelines 05/2020 on consent under GDPR</li>
+          <li><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng" target="_blank" rel="noopener">EU GDPR 本文 / Recital 30 / Article 4, 6, 7</a>: EUR-Lex の Regulation (EU) 2016/679</li>
+          <li><a href="https://eur-lex.europa.eu/eli/dir/2002/58/oj/eng" target="_blank" rel="noopener">EU ePrivacy Directive Article 5(3)</a>: EUR-Lex の Directive 2002/58/EC</li>
+          <li><a href="https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-052020-consent-under-regulation-2016679_en" target="_blank" rel="noopener">EDPB Guidelines 05/2020 on consent under GDPR</a></li>
           <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/configure/defaultconsent" target="_blank" rel="noopener">Adobe Experience Platform Web SDK: defaultConsent</a></li>
           <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/commands/setconsent" target="_blank" rel="noopener">Adobe Experience Platform Web SDK: setConsent</a></li>
           <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/landing/governance-privacy-security/consent/sdk" target="_blank" rel="noopener">Process Customer Consent Data Using the Adobe Experience Platform Web SDK</a></li>
-          <li>Adobe Experience Cloud / Target cookie documentation</li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/core-services/interface/data-collection/cookies/target" target="_blank" rel="noopener">Adobe Target Cookies</a> / <a href="https://experienceleague.adobe.com/en/docs/experience-platform/privacy/home" target="_blank" rel="noopener">Privacy Service Overview</a> — Adobe Experience Cloud documentation</li>
           <li><a href="https://support.google.com/google-ads/answer/10000067?hl=en" target="_blank" rel="noopener">About consent mode (cookieless pings) — Google Ads Help</a></li>
           <li><a href="https://www.cookieyes.com/knowledge-base/google-consent-mode/what-is-cookieless-pings/" target="_blank" rel="noopener">What is cookieless pings? — CookieYes</a></li>
+          <li><a href="https://support.google.com/analytics/answer/13802165" target="_blank" rel="noopener">Consent mode reference — Analytics Help</a></li>
+          <li><a href="https://support.google.com/analytics/answer/11161109?hl=en" target="_blank" rel="noopener">[GA4] Behavioral modeling for consent mode — Analytics Help</a></li>
+          <li><a href="https://services.google.com/fh/files/misc/consent_mode_overview.pdf" target="_blank" rel="noopener">Consent Mode Overview(Google, 2022年2月)</a></li>
+          <li><a href="https://storage.googleapis.com/arxiv-dataset/arxiv/arxiv/pdf/2312/2312.08806v6.pdf" target="_blank" rel="noopener">"You Can't Trust Your Tag Neither": Privacy Leaks and Potential Legal Violations within the Google Tag Manager(第三者による cookieless ping の通信解析)</a></li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/platform-learn/implement-web-sdk/consent-management/setup-consent" target="_blank" rel="noopener">Set up consent with Platform Web SDK — Adobe Data Collection</a></li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/identity/overview" target="_blank" rel="noopener">Identity data in the Web SDK — Adobe Data Collection</a></li>
+          <li><a href="https://marketing.adobe.com/resources/help/en_US/sc/implement/visid_fallback.html" target="_blank" rel="noopener">Unique visitors(Visitor ID フォールバック仕様)— Adobe Analytics</a></li>
+          <li><a href="https://experienceleaguecommunities.adobe.com/t5/adobe-analytics-questions/consent-mode-in-adobe-analytics/m-p/586106" target="_blank" rel="noopener">Consent Mode in Adobe Analytics — Adobe Experience League Community</a></li>
+          <li><a href="https://experienceleague.adobe.com/en/docs/customer-journey-analytics-learn/tutorials/visitor-id/configure-missing-person-id" target="_blank" rel="noopener">Configure a missing Person ID in Customer Journey Analytics</a></li>
         </ol>
       </article>
     </section>
