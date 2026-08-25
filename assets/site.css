@@ -1,0 +1,228 @@
+/* =========================================================================
+   pages — 共有デザインシステム（3色ミニマル: 白 / ニアブラック / アクセント青）
+   すべてのページで読み込む共通スタイル。装飾は最小・単色・フラット。
+   ========================================================================= */
+
+:root{
+  --bg:#ffffff;
+  --ink:#16181d;
+  --accent:#2f66f0;
+  --accent-hover:#1f4fd0;
+  --muted:#6b7280;
+  --line:#e6e8ec;
+  --surface:#f6f7f9;
+
+  --font:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+  --mono:ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius:12px;
+  --max:900px;
+
+  --duration:200ms;
+  --ease:cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:16px;
+  line-height:1.85;
+  letter-spacing:.005em;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ---- layout ---- */
+.wrap{max-width:var(--max); margin:0 auto; padding:40px 22px 80px}
+.wrap.wide{max-width:1080px}
+
+/* ---- links ---- */
+a{color:var(--accent); text-decoration:none}
+a:hover,a:focus-visible{color:var(--accent-hover); text-decoration:underline}
+.backlink{display:inline-block; color:var(--muted); font-size:.9rem; margin-bottom:18px}
+.backlink:hover{color:var(--accent); text-decoration:none}
+
+/* ---- typography ---- */
+h1{font-size:clamp(1.7rem, 1.2rem + 2.4vw, 2.6rem); line-height:1.2; font-weight:750; margin:0 0 16px; letter-spacing:-.01em}
+h2{font-size:1.35rem; font-weight:750; line-height:1.3; margin:0 0 6px; padding-top:8px}
+h2 .n,h2 .index{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:10px}
+h3{font-size:1.02rem; font-weight:700; margin:24px 0 8px}
+h4{font-size:.95rem; font-weight:700; margin:18px 0 6px}
+p{margin:0 0 14px}
+ul,ol{margin:8px 0 14px; padding-left:1.4em}
+li{margin:6px 0}
+strong{font-weight:700}
+hr{border:none; border-top:1px solid var(--line); margin:28px 0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.lede{color:var(--muted); font-size:1.05rem; margin:0}
+
+/* ---- eyebrow / kicker ---- */
+.kicker,.eyebrow,.section-kicker{
+  display:inline-block; font-size:.74rem; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:14px;
+}
+
+/* ---- hero / header ---- */
+header.hero,section.hero,.hero{
+  margin:22px 0 8px; padding:0 0 26px; border-bottom:1px solid var(--line);
+  background:none; box-shadow:none; border-radius:0;
+}
+.hero .meta,.meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+
+/* ---- pills ---- */
+.pill{
+  display:inline-block; padding:6px 12px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line);
+  color:var(--ink); font-size:.85rem;
+}
+
+/* ---- table of contents ---- */
+nav.toc{margin:22px 0 0; font-size:.9rem}
+nav.toc ol,nav.toc ul{margin:0; padding-left:1.3em; color:var(--muted)}
+nav.toc li{margin:3px 0}
+
+/* ---- sections ---- */
+section{margin:44px 0 0; scroll-margin-top:20px}
+
+/* index 用: 番号付き見出し */
+.section-heading{display:flex; align-items:baseline; gap:12px; margin:44px 0 20px}
+.section-heading .index{font-size:1rem; color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums}
+.section-heading h2{margin:0; padding:0}
+
+/* ---- note / callout（全バリアントをアクセント左罫の単一スタイルに統一）---- */
+.note,.callout{
+  border:1px solid var(--line); border-left:3px solid var(--accent);
+  background:var(--surface); border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 18px; margin:18px 0; color:var(--ink);
+}
+.note p:last-child,.callout p:last-child{margin-bottom:0}
+.note .label,.callout .label,.callout-title{
+  display:block; font-weight:700; color:var(--accent);
+  font-size:.82rem; letter-spacing:.04em; text-transform:uppercase; margin-bottom:6px;
+}
+/* 旧バリアントは色を足さず同一トーンに寄せる（意味は太字/ラベルで） */
+.callout.warn,.callout.danger,.callout.ok,.callout.info,.info,.warn{}
+
+/* ---- quote ---- */
+.quote,blockquote{
+  border-left:3px solid var(--accent); padding:2px 0 2px 16px;
+  margin:12px 0; color:var(--ink); font-size:1.02rem;
+}
+
+/* ---- cards ---- */
+.card{
+  background:var(--bg); border:1px solid var(--line); border-radius:var(--radius);
+  padding:22px; box-shadow:none;
+  transition:border-color var(--duration) var(--ease), transform var(--duration) var(--ease);
+}
+.card:hover,.card:focus-within{border-color:var(--accent); transform:translateY(-2px)}
+.card h3{margin-top:0}
+.card p.desc{color:var(--muted); font-size:.95rem; margin:0 0 14px}
+
+/* ---- grid / bento ---- */
+.grid{display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-top:20px}
+.categories{display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); margin:0 0 36px}
+.span-12{grid-column:span 12}
+.span-8{grid-column:span 8}
+.span-7{grid-column:span 7}
+.span-6{grid-column:span 6}
+.span-5{grid-column:span 5}
+.span-4{grid-column:span 4}
+.span-3{grid-column:span 3}
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+.stack{display:grid; gap:14px}
+
+/* index 用: カード内リンクリスト */
+.card ul{list-style:none; margin:0; padding:14px 0 0; border-top:1px solid var(--line)}
+.card li{margin:0}
+.card li + li{margin-top:8px}
+.card a.entry{
+  display:inline-flex; align-items:center; gap:8px;
+  color:var(--muted); font-size:.92rem; text-decoration:none;
+}
+.card a.entry::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--accent); flex:none}
+.card a.entry:hover{color:var(--accent); text-decoration:none}
+
+/* ---- tags（色バリアントは中立に統一）---- */
+.tag{
+  display:inline-block; font-size:.78rem; font-weight:700; margin-right:8px;
+  padding:3px 10px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink);
+}
+.tag.blue,.tag.green,.tag.yellow,.tag.red{background:var(--surface); color:var(--ink); border-color:var(--line)}
+.tag.accent{background:var(--accent); color:#fff; border-color:transparent}
+
+/* ---- steps（番号バッジ）---- */
+.steps{counter-reset:step; list-style:none; padding:0; margin:14px 0}
+.steps>li{counter-increment:step; position:relative; padding-left:44px; margin:0 0 20px}
+.steps>li::before{
+  content:counter(step); position:absolute; left:0; top:0;
+  width:28px; height:28px; border-radius:50%;
+  background:var(--ink); color:#fff; font-size:.82rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.steps>li h3{margin-top:2px}
+.step{display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-top:1px dashed var(--line)}
+.step:first-child{border-top:none; padding-top:0}
+.num{
+  flex:0 0 auto; width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--ink); color:#fff; font-weight:700; font-size:.85rem;
+}
+
+/* ---- code ---- */
+code{
+  font-family:var(--mono); font-size:.86em;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:6px; padding:1px 5px; color:var(--ink);
+}
+pre{
+  font-family:var(--mono); font-size:.82rem; line-height:1.65;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); padding:16px 18px; overflow:auto;
+  white-space:pre; margin:12px 0;
+}
+pre code{background:none; border:none; padding:0; font-size:inherit; color:inherit}
+
+/* ---- details ---- */
+details{border:1px solid var(--line); border-radius:var(--radius); margin:12px 0; overflow:hidden}
+details summary{cursor:pointer; padding:12px 16px; font-weight:700; font-size:.92rem; background:var(--surface); list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ "; color:var(--accent)}
+details[open] summary::before{content:"▾ "}
+details pre{border:none; border-top:1px solid var(--line); border-radius:0; margin:0}
+
+/* ---- tables ---- */
+.tablewrap,.table-wrap{overflow:auto; margin:14px 0}
+table{width:100%; border-collapse:collapse; font-size:.92rem; min-width:520px; background:var(--bg)}
+th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-weight:700; border-bottom:2px solid var(--ink); background:none}
+tr:last-child td{border-bottom:none}
+
+/* ---- TL;DR ボックス ---- */
+.tldr{border:1.5px solid var(--accent); border-radius:var(--radius); background:var(--surface); padding:18px 22px; margin:24px 0 0}
+.tldr .label{display:inline-block; font-weight:800; color:#fff; background:var(--accent); font-size:.72rem; letter-spacing:.1em; padding:3px 10px; border-radius:999px; margin-bottom:10px}
+.tldr ul{margin:0; padding-left:1.3em}
+.tldr li{margin:5px 0}
+.tldr li::marker{color:var(--accent)}
+
+/* ---- footer ---- */
+footer,.footer,.site-footer{
+  margin-top:56px; padding-top:22px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:.86rem; line-height:1.9;
+}
+footer a,.footer a,.site-footer a{color:var(--muted); text-decoration:underline}
+.source-list li{margin:8px 0}
+
+/* ---- responsive ---- */
+@media (max-width:900px){
+  .span-8,.span-7,.span-6,.span-5,.span-4,.span-3{grid-column:span 12}
+  .two-col,.three-col{grid-template-columns:1fr}
+  table{min-width:0}
+}

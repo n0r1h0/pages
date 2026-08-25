@@ -5,200 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLMサービスの「賢さ」の正体を、やさしい言葉と例えだけでゆっくり掴むための軽量版ガイド。">
 <title>AIの「賢さ」って、どこから来るの? — ゆるっと理解編</title>
+<link rel="stylesheet" href="../assets/site.css">
 <style>
-  :root {
-    --bg: #fbf6ef;
-    --bg-soft: #f3ecff;
-    --panel: #ffffff;
-    --ink: #3a352f;
-    --muted: #7c7468;
-    --line: #ece3d6;
-    --accent: #7c86e0;
-    --accent-soft: #e7e9fb;
-    --peach: #ff9d72;
-    --peach-soft: #ffe8dc;
-    --radius: 26px;
-    --duration: 700ms;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0;
-    background:
-      radial-gradient(circle at 8% 0%, var(--bg-soft), transparent 45%),
-      radial-gradient(circle at 95% 15%, var(--peach-soft), transparent 40%),
-      var(--bg);
-    color: var(--ink);
-    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic UI", sans-serif;
-    font-size: 1.08rem;
-    line-height: 2.05;
-    letter-spacing: 0.01em;
-  }
-
-  .wrap {
-    width: min(680px, 100% - 48px);
-    margin-inline: auto;
-  }
-
-  header.hero {
-    padding: 100px 0 70px;
-    text-align: center;
-  }
-
-  .kicker {
-    display: inline-block;
-    padding: 7px 16px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    margin-bottom: 22px;
-  }
-
-  h1 {
-    font-size: clamp(2rem, 5vw, 2.7rem);
-    line-height: 1.5;
-    font-weight: 800;
-    margin: 0 0 22px;
-  }
-
-  .hero p.lead {
-    color: var(--muted);
-    font-size: 1.15rem;
-    line-height: 1.9;
-    max-width: 46ch;
-    margin: 0 auto;
-  }
-
-  main { padding-bottom: 60px; }
-
-  .beat {
-    padding: 56px 0;
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity var(--duration) var(--ease), transform var(--duration) var(--ease);
-  }
-
-  .beat.is-visible {
-    opacity: 1;
-    transform: none;
-  }
-
-  .beat .num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--panel);
-    box-shadow: 0 8px 22px rgba(60, 50, 30, 0.07);
-    color: var(--accent);
-    font-weight: 800;
-    margin-bottom: 20px;
-  }
-
-  .beat h2 {
-    font-size: clamp(1.4rem, 3.4vw, 1.9rem);
-    line-height: 1.55;
-    margin: 0 0 18px;
-  }
-
-  .beat p {
-    margin: 0 0 16px;
-    max-width: 58ch;
-  }
-
-  .beat p:last-child { margin-bottom: 0; }
-
-  .analogy {
-    margin-top: 24px;
-    padding: 22px 26px;
-    background: var(--panel);
-    border-radius: var(--radius);
-    box-shadow: 0 10px 30px rgba(60, 50, 30, 0.06);
-  }
-
-  .analogy .label {
-    display: block;
-    color: var(--peach);
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .analogy p { margin: 0; color: var(--ink); }
-
-  .divider {
-    width: 46px;
-    height: 3px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    margin: 0 auto;
-  }
-
-  .closing {
-    text-align: center;
-    padding: 70px 0 40px;
-  }
-
-  .closing h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
-
-  .closing p {
-    color: var(--muted);
-    max-width: 50ch;
-    margin: 0 auto 30px;
-  }
-
-  .btn-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
-  }
-
-  .btn {
-    display: inline-block;
-    padding: 13px 24px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 0.95rem;
-    transition: transform 180ms var(--ease), box-shadow 180ms var(--ease);
-  }
-
-  .btn.primary {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 10px 26px rgba(124, 134, 224, 0.35);
-  }
-
-  .btn:hover { transform: translateY(-2px); }
-
-  footer {
-    padding: 30px 0 60px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.82rem;
-    line-height: 1.9;
-  }
-
-  footer a { color: var(--muted); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .beat {
-      transition: none;
-      opacity: 1;
-      transform: none;
-    }
-  }
+  body{ font-family:var(--font); font-size:1.06rem; line-height:2.0; }
+  .wrap{ max-width:680px; }
+  header.hero{ text-align:center; padding:80px 0 56px; border-bottom:none; margin:0; }
+  header.hero .kicker{ margin-bottom:20px; }
+  header.hero h1{ font-size:clamp(2rem,5vw,2.7rem); line-height:1.4; }
+  .hero p.lead{ color:var(--muted); font-size:1.12rem; max-width:46ch; margin:0 auto; }
+  main{ padding-bottom:40px; }
+  .beat{ padding:52px 0; opacity:0; transform:translateY(24px); transition:opacity .6s var(--ease), transform .6s var(--ease); }
+  .beat.is-visible{ opacity:1; transform:none; }
+  .beat .num{ margin-bottom:18px; }
+  .beat h2{ font-size:clamp(1.4rem,3.4vw,1.9rem); line-height:1.5; margin:0 0 16px; padding:0; }
+  .beat p{ margin:0 0 16px; max-width:60ch; }
+  .beat p:last-child{ margin-bottom:0; }
+  .analogy{ margin-top:22px; padding:18px 22px; background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:0 var(--radius) var(--radius) 0; }
+  .analogy .label{ display:block; color:var(--accent); font-size:.78rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; }
+  .analogy p{ margin:0; }
+  .divider{ width:40px; height:2px; border-radius:999px; background:var(--line); margin:0 auto; }
+  .closing{ text-align:center; padding:60px 0 30px; }
+  .closing h2{ font-size:clamp(1.5rem,4vw,2rem); }
+  .closing p{ color:var(--muted); max-width:52ch; margin:0 auto 26px; }
+  .btn-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .btn{ display:inline-block; padding:12px 22px; border-radius:999px; font-weight:700; font-size:.95rem; border:1px solid var(--line); transition:transform 180ms var(--ease); }
+  .btn.primary{ background:var(--accent); color:#fff; border-color:transparent; }
+  .btn:hover{ transform:translateY(-2px); text-decoration:none; }
+  @media (prefers-reduced-motion: reduce){ .beat{ transition:none; opacity:1; transform:none; } }
 </style>
 </head>
 <body>
