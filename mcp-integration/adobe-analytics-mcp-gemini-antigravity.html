@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Antigravity CLI から Adobe Analytics MCP に接続する実践ガイド。対話OAuthが使えない Antigravity 向けに、24時間で失効する IMS トークンをローカル stdio プロキシでオンデマンド自動更新する、実際に動いた構成をまとめた学習ノート。" />
+  <title>Antigravity CLI で Adobe Analytics MCP に接続する（実践編）</title>
+  <style>
+    /* ===== 3色構成: 白 / ニアブラック / アクセント（青）＋ 中立グレー ===== */
+    :root{
+      --bg:#ffffff;
+      --ink:#16181d;
+      --accent:#2f66f0;
+      --muted:#6b7280;
+      --line:#e6e8ec;
+      --surface:#f6f7f9;
+      --font:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+      --mono:ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      --radius:12px;
+      --max:820px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:var(--font); line-height:1.85; font-size:16px;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:var(--max); margin:0 auto; padding:40px 22px 80px}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .backlink{color:var(--muted); font-size:.9rem}
+    .backlink:hover{color:var(--accent); text-decoration:none}
+
+    header.hero{margin:22px 0 8px; padding-bottom:26px; border-bottom:1px solid var(--line)}
+    .kicker{
+      display:inline-block; font-size:.74rem; font-weight:700; letter-spacing:.14em;
+      text-transform:uppercase; color:var(--accent); margin-bottom:14px;
+    }
+    h1{font-size:clamp(1.7rem, 1.2rem + 2.4vw, 2.6rem); line-height:1.2; font-weight:750; margin:0 0 16px}
+    .lede{color:var(--muted); font-size:1.05rem; margin:0}
+
+    nav.toc{margin:22px 0 0; font-size:.9rem}
+    nav.toc ol{margin:0; padding-left:1.3em; color:var(--muted)}
+    nav.toc li{margin:3px 0}
+
+    section{margin:44px 0 0; scroll-margin-top:20px}
+    h2{
+      font-size:1.35rem; font-weight:750; margin:0 0 6px; line-height:1.3;
+      padding-top:8px;
+    }
+    h2 .n{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:10px}
+    h3{font-size:1.02rem; font-weight:700; margin:26px 0 8px}
+    p{margin:0 0 14px}
+    ul,ol{margin:8px 0 14px; padding-left:1.4em}
+    li{margin:6px 0}
+    strong{font-weight:700}
+    .muted{color:var(--muted)}
+    .small{font-size:.9rem}
+
+    /* 単一のノート枠（アクセント左罫）。強調は太字で */
+    .note{
+      border:1px solid var(--line); border-left:3px solid var(--accent);
+      background:var(--surface); border-radius:0 var(--radius) var(--radius) 0;
+      padding:14px 18px; margin:18px 0;
+    }
+    .note p:last-child{margin-bottom:0}
+    .note .label{font-weight:700; color:var(--accent); font-size:.82rem; letter-spacing:.04em; text-transform:uppercase}
+
+    /* TL;DR: アクセント枠で全体を囲む要約ボックス */
+    .tldr{
+      border:1.5px solid var(--accent); border-radius:var(--radius);
+      background:var(--surface); padding:18px 22px; margin:24px 0 0;
+    }
+    .tldr .label{
+      display:inline-block; font-weight:800; color:#fff; background:var(--accent);
+      font-size:.72rem; letter-spacing:.1em; padding:3px 10px; border-radius:999px; margin-bottom:10px;
+    }
+    .tldr ul{margin:0; padding-left:1.3em}
+    .tldr li{margin:5px 0}
+    .tldr li::marker{color:var(--accent)}
+
+    /* コード: 明るいグレー面・単色 */
+    code{
+      font-family:var(--mono); font-size:.86em;
+      background:var(--surface); border:1px solid var(--line);
+      border-radius:6px; padding:1px 5px;
+    }
+    pre{
+      font-family:var(--mono); font-size:.82rem; line-height:1.65;
+      background:var(--surface); border:1px solid var(--line);
+      border-radius:var(--radius); padding:16px 18px; overflow:auto;
+      white-space:pre; margin:12px 0;
+    }
+    pre code{background:none; border:none; padding:0; font-size:inherit}
+
+    details{border:1px solid var(--line); border-radius:var(--radius); margin:12px 0; overflow:hidden}
+    details summary{
+      cursor:pointer; padding:12px 16px; font-weight:700; font-size:.92rem;
+      background:var(--surface); list-style:none;
+    }
+    details summary::-webkit-details-marker{display:none}
+    details summary::before{content:"▸ "; color:var(--accent)}
+    details[open] summary::before{content:"▾ "}
+    details pre{border:none; border-top:1px solid var(--line); border-radius:0; margin:0}
+
+    /* テーブル: 罫線最小・単色 */
+    .tablewrap{overflow:auto; margin:14px 0}
+    table{width:100%; border-collapse:collapse; font-size:.92rem; min-width:520px}
+    th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+    th{font-weight:700; border-bottom:2px solid var(--ink)}
+    tr:last-child td{border-bottom:none}
+
+    /* 番号付きステップ */
+    .steps{counter-reset:step; list-style:none; padding:0; margin:14px 0}
+    .steps>li{counter-increment:step; position:relative; padding-left:44px; margin:0 0 20px}
+    .steps>li::before{
+      content:counter(step); position:absolute; left:0; top:0;
+      width:28px; height:28px; border-radius:50%;
+      background:var(--ink); color:#fff; font-size:.82rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .steps>li h3{margin-top:2px}
+
+    footer{margin-top:56px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:.86rem}
+    footer a{color:var(--muted); text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="backlink" href="../index.html">← pages トップへ</a>
+
+    <header class="hero">
+      <span class="kicker">MCP / AI Tooling</span>
+      <h1>Antigravity CLI で Adobe Analytics MCP に接続する</h1>
+      <p class="lede">
+        Google の <strong>Antigravity CLI</strong> から、Adobe 公式のリモート MCP サーバー
+        <strong>Adobe Analytics MCP</strong> に接続する実践ガイドです。核心は、<strong>24時間で失効する IMS トークンを、ローカルの stdio プロキシでオンデマンド自動更新する</strong>こと。実際に動いた構成をそのまま載せます。
+      </p>
+      <div class="note" id="gemini-note" style="scroll-margin-top:20px">
+        <p class="label">Gemini CLI を使う人は、このガイドは不要</p>
+        <p><strong>Gemini CLI なら、この手順（stdio プロキシ）は要りません。</strong> Claude・ChatGPT と同じように、MCP サーバーとして URL <code>https://aa-mcp.adobe.io/mcp</code> を登録し、ブラウザで Adobe ID ログインするだけで繋がります（対話OAuth）。認証情報の発行もプロキシも不要です。<br><strong>本ガイドは、その対話OAuthが使えない Antigravity CLI 向けの回避策</strong>（Server-to-Server ＋ ローカルプロキシ）をまとめたものです。</p>
+        <p class="small"><strong>ただし既知の不具合（<code>findReportSuites</code>）に注意:</strong> どのクライアントでも、<code>findReportSuites</code> 等で <code>Invalid input: expected record, received array</code> が出ることがあります。サーバーが <code>structuredContent</code> を最上位「配列」で返しており（MCP 仕様上は「オブジェクト」であるべき違反）、Zod 等で厳密検証する MCP クライアント（Claude Desktop 系など）は <code>invalid_type</code> として弾きます。一方 claude.ai コネクタ経由など検証が緩いクライアントではエラーにならず配列がそのまま返ります。クライアント側では直せないため、当面は<strong>エラーが出ないクライアント経由で使う</strong>か、<strong>生の HTTP レスポンスを見て後続処理側で配列を想定して扱う</strong>（Adobe 側の仕様修正待ち）。</p>
+      </div>
+      <div class="tldr">
+        <span class="label">TL;DR</span>
+        <ul>
+          <li>接続先は Adobe 公式のリモート MCP <code>https://aa-mcp.adobe.io/mcp</code>（Adobe Analytics MCP）。</li>
+          <li>認証トークン（Adobe IMS）は<strong>約24時間で失効</strong>するため、設定に直書きすると翌日 <code>401</code> で止まる。</li>
+          <li>対策は<strong>ローカル stdio プロキシ</strong>（<code>adobe_mcp_proxy.py</code>、Python 標準ライブラリのみ）。ツール呼び出し時に<strong>トークンをオンデマンド自動更新</strong>し、<code>401</code> なら再取得して1回リトライ。常駐・cron 不要。</li>
+          <li>Antigravity CLI の <code>mcpServers</code> に <code>command: python3</code> ＋ プロキシの絶対パスを書くだけ（stdio）。この構成は <strong>Antigravity CLI（<code>agy</code>）で検証済み</strong>。</li>
+          <li>そもそも Antigravity で対話OAuthが使えないのは、<strong>Adobe が Antigravity のリダイレクトURIを拒否するため</strong>（→ §03）。プロキシはその回避策。</li>
+          <li>事前準備: Adobe Developer Console で <strong>OAuth Server-to-Server</strong> 資格情報を発行し、MCP/Analytics 権限を付与。</li>
+        </ul>
+      </div>
+      <nav class="toc" aria-label="目次">
+        <ol>
+          <li><a href="#overview">全体像と「24時間で失効する」課題</a></li>
+          <li><a href="#adobe">Adobe 側の準備（認証情報を発行する）</a></li>
+          <li><a href="#approach">なぜプロキシが必要か（Antigravity の制限）</a></li>
+          <li><a href="#build">プロキシを構築する（3ファイル）</a></li>
+          <li><a href="#client">Antigravity CLI に登録する</a></li>
+          <li><a href="#verify">動作確認と初回セッション</a></li>
+          <li><a href="#tools">使える主なツール</a></li>
+          <li><a href="#trouble">トラブルシューティング</a></li>
+        </ol>
+      </nav>
+    </header>
+
+    <!-- 1 -->
+    <section id="overview">
+      <h2><span class="n">01</span>全体像と「24時間で失効する」課題</h2>
+      <div class="note">
+        <p class="label">この手順について</p>
+        <p>本ガイドは <strong>Antigravity CLI（<code>agy</code>）で実際に構築・検証したサンプル</strong>です。Antigravity CLI は<strong>リダイレクトURIの制限で対話OAuthが使えない</strong>ため、Server-to-Server 認証＋ローカルの stdio プロキシで接続します（理由は <a href="#approach">§03</a>）。</p>
+      </div>
+      <p>登場人物は3つです。<strong>①MCP クライアント</strong>（Antigravity CLI）、<strong>②MCP サーバー</strong>（Adobe がホストする <code>https://aa-mcp.adobe.io/mcp</code>）、<strong>③認証</strong>（Adobe IMS が発行する OAuth トークン）。</p>
+      <p>問題は③です。Adobe Analytics MCP への通信には Adobe IMS の OAuth Access Token が必要ですが、<strong>この有効期限は約24時間（86,400秒）</strong>。トークンを設定ファイルに直書きすると、翌日には <code>HTTP 401</code> でツールが動かなくなります。</p>
+      <div class="note">
+        <p class="label">この構成の解決策</p>
+        <p>ローカルに <strong>stdio MCP プロキシ（<code>adobe_mcp_proxy.py</code>）</strong>を置きます。クライアントが MCP ツールを呼んだ瞬間にプロキシが起動し、トークンの残り時間を判定。切れていれば <code>POST /ims/token/v3</code> で取得し直してキャッシュし、リモートの MCP サーバーへ中継します。<strong>常駐デーモンや cron は不要</strong>で、利用時のみ動きます。<code>401</code> を受けたら強制再取得して1回だけ自動リトライします。</p>
+      </div>
+      <p class="small muted">プロキシは Python 3 標準ライブラリのみ（<code>urllib</code> 等）で実装でき、<code>pip install</code> は不要です。</p>
+    </section>
+
+    <!-- 2 -->
+    <section id="adobe">
+      <h2><span class="n">02</span>Adobe 側の準備（認証情報を発行する）</h2>
+      <p><a href="https://developer.adobe.com/console" target="_blank" rel="noopener">Adobe Developer Console</a> で API 資格情報を発行し、Analytics の権限を紐付けます。</p>
+      <ol class="steps">
+        <li>
+          <h3>プロジェクトを作成する</h3>
+          <p>Developer Console にログインし、画面右上の組織（IMS Org）が対象組織であることを確認して <strong>Create new project</strong>。</p>
+        </li>
+        <li>
+          <h3>Adobe Analytics API を追加する</h3>
+          <p><strong>Add to Project → API → Adobe Analytics</strong> を選択して Next。</p>
+        </li>
+        <li>
+          <h3>OAuth Server-to-Server を選ぶ</h3>
+          <p>認証方式で <strong>OAuth Server-to-Server</strong> を選択（旧 Service Account JWT は非推奨）。Credential 名を付けて保存。</p>
+        </li>
+        <li>
+          <h3>Product Profile（権限）を紐付ける</h3>
+          <p>対象レポートスイートの閲覧権限を含む Adobe Analytics 製品プロファイルを選び <strong>Save configured API</strong>。権限が不足すると <code>unauthorized_metric</code> / <code>unauthorized_dimension</code> エラーになります。</p>
+        </li>
+        <li>
+          <h3>認証情報を控える</h3>
+          <p><strong>Client ID</strong> / <strong>Client Secret</strong> / <strong>Organization ID</strong>（<code>...@AdobeOrg</code>）/ <strong>Scopes</strong> をコピーします。加えて Adobe Analytics の <strong>Global Company ID</strong>（例 <code>adoben1b</code>）も控えます。</p>
+        </li>
+      </ol>
+      <p>MCP サーバーへ送るリクエストには、これらが以下の HTTP ヘッダーとして必要です（プロキシが自動付与します）。</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>ヘッダー</th><th>値</th></tr></thead>
+          <tbody>
+            <tr><td><code>Authorization</code></td><td><code>Bearer &lt;IMS Access Token&gt;</code></td></tr>
+            <tr><td><code>x-api-key</code></td><td>Client ID</td></tr>
+            <tr><td><code>x-gw-ims-org-id</code></td><td>Organization ID（<code>@AdobeOrg</code>）</td></tr>
+            <tr><td><code>x-global-company-id</code></td><td>Global Company ID</td></tr>
+            <tr><td><code>Content-Type</code></td><td><code>application/json</code></td></tr>
+            <tr><td><code>Accept</code></td><td><code>application/json, text/event-stream</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section id="approach">
+      <h2><span class="n">03</span>なぜプロキシが必要か（Antigravity の制限）</h2>
+      <p>サーバー（<code>aa-mcp.adobe.io</code>）は<strong>対話OAuthを完全にサポート</strong>しています（<code>WWW-Authenticate</code> と <code>.well-known</code> を広告し、動的クライアント登録＝DCR・<code>authorization_code</code>・PKCE 対応）。つまり本来なら「URL を登録してブラウザログイン」で繋がるはずです。分かれ目は<strong>クライアントのリダイレクトURIを Adobe が受理するか</strong>でした。実測では:</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>クライアントの redirect URI</th><th>Adobe DCR の応答</th><th>結果</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ループバック <code>http://localhost:&lt;port&gt;/oauth/callback</code></td>
+              <td><strong><code>201 Created</code>（受理）</strong></td>
+              <td>対話OAuthが成立</td>
+            </tr>
+            <tr>
+              <td><strong>Antigravity の固定 URI</strong> <code>https://antigravity.google/oauth-callback</code></td>
+              <td><strong><code>400 invalid_redirect_uri</code>（拒否）</strong></td>
+              <td>ブラウザ認証が起動せず <em>unauthorized</em> のまま</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <p class="label">これは Antigravity CLI 側の制限</p>
+        <p>Antigravity は固定のリダイレクトURI <code>https://antigravity.google/oauth-callback</code> を使いますが、これを Adobe の DCR が拒否します。Antigravity はこの URI を変更できないため、<strong>対話OAuthは事実上使えません</strong>。そこで本ガイドでは、<strong>Server-to-Server（S2S）認証＋ローカル stdio プロキシ</strong>で接続します。S2S には refresh token が無く 24時間で失効するため、プロキシがトークンを<strong>オンデマンドで再取得</strong>して補います（→ <a href="#build">§04</a>）。</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="build">
+      <h2><span class="n">04</span>プロキシを構築する（3ファイル）</h2>
+      <p>作業ディレクトリ（例 <code>~/Documents/adobe-mcp-proxy</code>）に次の3ファイルを置きます。</p>
+      <pre><code>adobe-mcp-proxy/
+├── adobe_auth_config.json   # 認証設定（chmod 600）
+├── adobe_mcp_proxy.py       # stdio プロキシ本体
+└── .gitignore               # シークレット除外</code></pre>
+
+      <h3>4.1 認証設定 <code>adobe_auth_config.json</code></h3>
+      <p>各値を自分の環境のものに置き換えます。<code>scopes</code> は Developer Console の資格情報に表示される文字列を使います。</p>
+      <pre><code>{
+  "client_id": "YOUR_CLIENT_ID",
+  "client_secret": "YOUR_CLIENT_SECRET",
+  "org_id": "YOUR_ORG_ID@AdobeOrg",
+  "global_company_id": "YOUR_GLOBAL_COMPANY_ID",
+  "scopes": "additional_info.job_function,openid,AdobeID,target_sdk,additional_info.roles,read_organizations,additional_info.projectedProductContext",
+  "serverUrl": "https://aa-mcp.adobe.io/mcp"
+}</code></pre>
+      <div class="note">
+        <p class="label">注意 — シークレットの保護</p>
+        <p>作成後、所有者のみアクセス可に制限します: <code>chmod 600 adobe_auth_config.json</code>。この値は <code>.gitignore</code> で Git 管理外にします。</p>
+      </div>
+
+      <h3>4.2 プロキシ本体 <code>adobe_mcp_proxy.py</code></h3>
+      <p>保存して実行権限を付与します: <code>chmod +x adobe_mcp_proxy.py</code>。外部依存はなく Python 3.8+ で動きます。</p>
+      <details>
+        <summary>adobe_mcp_proxy.py（全文・クリックで展開）</summary>
+<pre><code>#!/usr/bin/env python3
+"""
+Adobe Analytics MCP Stdio Proxy
+-------------------------------
+Acts as a local stdio MCP server that proxies all JSON-RPC requests
+to the remote Adobe Analytics MCP server (https://aa-mcp.adobe.io/mcp).
+
+Token Management:
+- Completely on-demand (no cron, no background daemons).
+- When the AI client uses MCP, this proxy automatically checks token validity.
+- If expired or missing, it transparently requests a new token from Adobe IMS
+  and caches it for future calls.
+- If a 401 Unauthorized occurs, it automatically refreshes the token and retries.
+"""
+
+import base64
+import json
+import os
+import pathlib
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+IMS_TOKEN_URL = "https://ims-na1.adobelogin.com/ims/token/v3"
+DEFAULT_MCP_REMOTE_URL = "https://aa-mcp.adobe.io/mcp"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_DIR, "adobe_auth_config.json")
+TOKEN_CACHE_FILE = os.path.join(SCRIPT_DIR, ".token_cache.json")
+
+
+def debug_log(msg: str):
+    """Log to stderr so as not to interfere with MCP JSON-RPC on stdout."""
+    sys.stderr.write(f"[adobe-mcp-proxy] {msg}\n")
+    sys.stderr.flush()
+
+
+class AdobeMcpProxy:
+    def __init__(self, config_path: str = DEFAULT_CONFIG_PATH):
+        self.config_path = config_path
+        self.config = self.load_config()
+        self.remote_url = self.config.get("serverUrl", DEFAULT_MCP_REMOTE_URL)
+        self.access_token = None
+        self.expires_at = 0
+        self.session_id = None
+        self.load_cached_token()
+
+    def load_config(self) -> dict:
+        cfg = {}
+        if os.path.isfile(self.config_path):
+            try:
+                with open(self.config_path, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+            except Exception as e:
+                debug_log(f"Warning: Failed to load config from {self.config_path}: {e}")
+
+        return {
+            "client_id": cfg.get("client_id") or os.environ.get("ADOBE_CLIENT_ID", ""),
+            "client_secret": cfg.get("client_secret") or os.environ.get("ADOBE_CLIENT_SECRET", ""),
+            "org_id": cfg.get("org_id") or os.environ.get("ADOBE_ORG_ID", ""),
+            "global_company_id": cfg.get("global_company_id") or os.environ.get("ADOBE_GLOBAL_COMPANY_ID", ""),
+            "scopes": cfg.get("scopes") or os.environ.get(
+                "ADOBE_SCOPES",
+                "additional_info.job_function,openid,AdobeID,target_sdk,additional_info.roles,read_organizations,additional_info.projectedProductContext"
+            ),
+            "serverUrl": cfg.get("serverUrl", DEFAULT_MCP_REMOTE_URL),
+        }
+
+    def load_cached_token(self):
+        """Load token from disk cache if still valid."""
+        if not os.path.isfile(TOKEN_CACHE_FILE):
+            return
+        try:
+            with open(TOKEN_CACHE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            token = data.get("access_token")
+            exp = float(data.get("expires_at", 0))
+            if token and exp > time.time() + 60:
+                self.access_token = token
+                self.expires_at = exp
+                debug_log(f"Loaded cached token (valid for {(exp - time.time()) / 3600:.1f} more hours)")
+        except Exception as e:
+            debug_log(f"Failed to read token cache: {e}")
+
+    def save_cached_token(self, token: str, expires_in: float):
+        """Save token to disk cache."""
+        self.access_token = token
+        self.expires_at = time.time() + expires_in
+        try:
+            with open(TOKEN_CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump({"access_token": token, "expires_at": self.expires_at}, f)
+            os.chmod(TOKEN_CACHE_FILE, 0o600)
+        except Exception as e:
+            debug_log(f"Failed to save token cache: {e}")
+
+    def get_valid_token(self, force_refresh: bool = False) -> str:
+        """Return a valid token, refreshing on-demand if necessary."""
+        now = time.time()
+        # Refresh if token missing, expired, or less than 5 minutes remaining
+        if not force_refresh and self.access_token and (self.expires_at - now > 300):
+            return self.access_token
+
+        debug_log("Refreshing Adobe IMS Access Token on-demand...")
+        client_secret = self.config.get("client_secret")
+        if not client_secret:
+            raise ValueError("Client secret is missing in adobe_auth_config.json")
+
+        form_data = urllib.parse.urlencode({
+            "client_id": self.config["client_id"],
+            "client_secret": client_secret,
+            "grant_type": "client_credentials",
+            "scope": self.config["scopes"],
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            IMS_TOKEN_URL,
+            data=form_data,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "Adobe-MCP-Proxy/1.0",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+            new_token = resp_data.get("access_token")
+            expires_in = float(resp_data.get("expires_in", 86400))
+            if not new_token:
+                raise RuntimeError(f"Unexpected token response: {resp_data}")
+
+            self.save_cached_token(new_token, expires_in)
+            debug_log(f"New access token obtained successfully (expires in {expires_in / 3600:.1f}h)!")
+            return new_token
+        except urllib.error.HTTPError as e:
+            err = e.read().decode("utf-8")
+            raise RuntimeError(f"Adobe IMS error (HTTP {e.code}): {err}") from e
+
+    def forward_request(self, payload: dict, retry_count: int = 0) -> dict | None:
+        """Forward JSON-RPC request to the remote Adobe MCP endpoint."""
+        token = self.get_valid_token()
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "x-api-key": self.config["client_id"],
+            "x-gw-ims-org-id": self.config["org_id"],
+            "x-global-company-id": self.config["global_company_id"],
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        }
+        if self.session_id:
+            headers["Mcp-Session-Id"] = self.session_id
+
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(self.remote_url, data=data, headers=headers, method="POST")
+
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                sess = resp.headers.get("Mcp-Session-Id") or resp.headers.get("X-Session-Id")
+                if sess:
+                    self.session_id = sess
+                resp_body = resp.read().decode("utf-8")
+                if not resp_body.strip():
+                    return None
+                return json.loads(resp_body)
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and retry_count == 0:
+                debug_log("Received 401 Unauthorized from Adobe MCP server. Retrying with fresh token...")
+                self.get_valid_token(force_refresh=True)
+                return self.forward_request(payload, retry_count=1)
+            err_body = e.read().decode("utf-8")
+            debug_log(f"HTTP Error {e.code} from remote server: {err_body}")
+            req_id = payload.get("id")
+            if req_id is not None:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32603,
+                        "message": f"Remote MCP error ({e.code}): {err_body}",
+                    },
+                }
+            return None
+        except Exception as e:
+            debug_log(f"Communication error with remote MCP: {e}")
+            req_id = payload.get("id")
+            if req_id is not None:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32603,
+                        "message": f"Proxy communication error: {str(e)}",
+                    },
+                }
+            return None
+
+    def run(self):
+        """Main stdio loop reading JSON-RPC lines from stdin and writing to stdout."""
+        debug_log("Adobe MCP Stdio Proxy started.")
+        while True:
+            try:
+                line = sys.stdin.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError as e:
+                    debug_log(f"Invalid JSON received on stdin: {e}")
+                    continue
+
+                method = payload.get("method", "response")
+                req_id = payload.get("id")
+                debug_log(f"Processing method='{method}', id={req_id}")
+
+                res = self.forward_request(payload)
+                if res is not None:
+                    out_line = json.dumps(res, ensure_ascii=False)
+                    sys.stdout.write(out_line + "\n")
+                    sys.stdout.flush()
+
+            except (KeyboardInterrupt, SystemExit):
+                break
+            except Exception as e:
+                debug_log(f"Unexpected error in proxy loop: {e}")
+
+        debug_log("Adobe MCP Stdio Proxy stopped.")
+
+
+if __name__ == "__main__":
+    proxy = AdobeMcpProxy()
+    proxy.run()</code></pre>
+      </details>
+
+      <h3>4.3 Git 除外 <code>.gitignore</code></h3>
+<pre><code>.env
+adobe_auth_config.json
+.token_cache.json
+*.bak
+__pycache__/
+*.log</code></pre>
+    </section>
+
+    <!-- 5 -->
+    <section id="client">
+      <h2><span class="n">05</span>Antigravity CLI に登録する</h2>
+      <p>プロキシは stdio サーバーなので、Antigravity のグローバル設定 <code>~/.gemini/config/mcp_config.json</code>（またはワークスペースの <code>.agents/mcp_config.json</code>）の <code>mcpServers</code> に、<code>command</code> ＋ <code>args</code> でプロキシの<strong>絶対パス</strong>を指定するだけです。</p>
+<pre><code>{
+  "mcpServers": {
+    "adobe-analytics": {
+      "command": "python3",
+      "args": ["/ABSOLUTE/PATH/TO/adobe-mcp-proxy/adobe_mcp_proxy.py"]
+    }
+  }
+}</code></pre>
+      <p class="small muted"><code>/ABSOLUTE/PATH/TO/</code> は実際の絶対パスに置き換えてください。追記後、CLI のプロンプトで <code>/mcp</code> を実行するとマネージャーが開き、<code>adobe-analytics</code> のステータスが active になれば接続完了です。</p>
+    </section>
+
+    <!-- 6 -->
+    <section id="verify">
+      <h2><span class="n">06</span>動作確認と初回セッション</h2>
+      <h3>コマンドラインで単体テスト</h3>
+      <p>プロキシが起動し、ツール一覧が取れるかを確認します。</p>
+<pre><code>python3 -c "
+import subprocess, json
+
+proc = subprocess.Popen(
+    ['python3', 'adobe_mcp_proxy.py'],
+    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE, text=True
+)
+
+# initialize
+proc.stdin.write(json.dumps({
+    'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
+    'params': {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'test', 'version': '1.0'}}
+}) + '\n')
+proc.stdin.flush()
+print('Initialize response:', proc.stdout.readline())
+
+# tools/list
+proc.stdin.write(json.dumps({'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list', 'params': {}}) + '\n')
+proc.stdin.flush()
+tools_data = json.loads(proc.stdout.readline())
+print('Available tools count:', len(tools_data.get('result', {}).get('tools', [])))
+
+proc.terminate()
+"</code></pre>
+      <p class="small muted">期待される出力: <code>Initialize response: {..."result":{...}}</code> と <code>Available tools count: 26</code>。</p>
+
+      <h3>AI エージェントから呼ぶ</h3>
+      <p>Antigravity CLI で自然文で頼めば、ツールが透過的に実行されます。</p>
+      <ul>
+        <li>「Adobe Analytics の現在のサーバー日時を取得して」（<code>getServerDateTime</code>）</li>
+        <li>「利用可能なレポートスイートの一覧を出して」（<code>findReportSuites</code>）</li>
+        <li>「ページ別 PV のレポートを出して」（<code>runReport</code>）</li>
+      </ul>
+
+      <h3>推奨の初期化フロー（Bootstrap）</h3>
+      <ol>
+        <li><code>describeAa</code> を <code>guideType: "REPORT_SUITE_CONTEXT_GUIDE"</code> で実行し、利用ガイドをロード。</li>
+        <li><code>findCompanies</code> で <code>globalCompanyId</code>、<code>findReportSuites</code> で対象 <code>rsid</code> を特定。</li>
+        <li><code>setSessionDefaults</code> に <code>reportSuiteId</code> と <code>globalCompanyId</code> を渡す（以降は引数省略可）。</li>
+        <li>相対期間を扱う前に <code>getServerDateTime</code> でサーバー基準日を取得し、ISO 8601 で <code>runReport</code> を実行。</li>
+      </ol>
+    </section>
+
+    <!-- 7 -->
+    <section id="tools">
+      <h2><span class="n">07</span>使える主なツール（全26）</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>カテゴリ</th><th>ツール</th></tr></thead>
+          <tbody>
+            <tr><td>レポート集計</td><td><code>runReport</code>, <code>searchDimensionItems</code></td></tr>
+            <tr><td>メタデータ探索</td><td><code>findReportSuites</code>, <code>findDimensions</code>, <code>findMetrics</code>, <code>findSegments</code>, <code>findDateRanges</code>, <code>findProjects</code></td></tr>
+            <tr><td>セッション管理</td><td><code>setSessionDefaults</code>, <code>getDefaultSessionReportSuiteId</code>, <code>clearDefaultSessionReportSuiteId</code></td></tr>
+            <tr><td>環境・ガイド</td><td><code>getServerDateTime</code>, <code>describeAa</code>, <code>getStarterQuestions</code></td></tr>
+            <tr><td>作成・更新</td><td><code>upsertProject</code>/<code>describeProject</code>, <code>upsertSegment</code>/<code>describeSegment</code>, <code>upsertCalculatedMetric</code>/<code>describeCalculatedMetric</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted"><code>upsert*</code> 系は本番資産を変更し得ます。まず読み取り系で慣れてから使ってください。</p>
+    </section>
+
+    <!-- 8 -->
+    <section id="trouble">
+      <h2><span class="n">08</span>トラブルシューティング</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>現象</th><th>原因</th><th>対処</th></tr></thead>
+          <tbody>
+            <tr><td><code>HTTP 400: invalid_client</code></td><td>Client ID / Secret の誤り</td><td><code>adobe_auth_config.json</code> の値を再確認（末尾欠け等）</td></tr>
+            <tr><td><code>403</code> / <code>unauthorized_metric</code></td><td>Admin Console の権限不足</td><td>認証情報に紐づく Product Profile の権限を確認</td></tr>
+            <tr><td><code>FileNotFoundError</code></td><td>パス誤り</td><td><code>args</code> のパスが絶対パスか確認</td></tr>
+            <tr><td>内部挙動を調べたい</td><td>—</td><td>プロキシのログは <code>stderr</code> に出るのでターミナルで確認</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted"><code>findReportSuites</code> の <code>Invalid input: expected record, received array</code> は、Adobe サーバー側のスキーマ不整合による既知の不具合です（<a href="#gemini-note">冒頭の callout</a> を参照）。</p>
+    </section>
+
+    <footer>
+      <p><strong>出典:</strong>
+        <a href="https://developer.adobe.com/analytics-mcp/docs/" target="_blank" rel="noopener">Adobe Analytics MCP 公式ドキュメント</a>（<a href="https://developer.adobe.com/analytics-mcp/docs/guides/oauth" target="_blank" rel="noopener">OAuth ガイド</a> / <a href="https://developer.adobe.com/analytics-mcp/docs/aa/reference" target="_blank" rel="noopener">ツール一覧</a>）、
+        <a href="https://developer.adobe.com/console" target="_blank" rel="noopener">Adobe Developer Console</a>、
+        <a href="https://antigravity.google/docs/cli/mcp/" target="_blank" rel="noopener">Antigravity CLI MCP</a>。
+      </p>
+      <p>本資料は個人による学習・共有目的のノートであり、Adobe Inc. および Google LLC の公式見解・サポート文書ではありません。エンドポイント・認証仕様・提供状況は各社の更新で変わり得ます。実装時は必ず公式ドキュメントで最新仕様をご確認ください。掲載のコードは無保証です。</p>
+    </footer>
+
+  </div>
+</body>
+</html>
