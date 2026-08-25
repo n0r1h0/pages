@@ -3197,15 +3197,15 @@ code {
   <p class="q-text">THEN の起点（最初の product ヒット）はどれになるか？</p>
   <div class="choices" data-correct="B">
     <button class="choice-btn" data-key="A"><span class="choice-key">A</span><span>S1 の最後の product ヒット（2 件目）が起点になる</span></button>
-    <button class="choice-btn" data-key="B"><span class="choice-key">B</span><span>S1 の最初の product ヒット（1 件目）が起点になる（最短マッチを優先）</span></button>
+    <button class="choice-btn" data-key="B"><span class="choice-key">B</span><span>S1 の最初の product ヒット（1 件目）が起点になる</span></button>
     <button class="choice-btn" data-key="C"><span class="choice-key">C</span><span>どちらの product ヒットが起点でも結果は同じになるため、どちらでもよい</span></button>
     <button class="choice-btn" data-key="D"><span class="choice-key">D</span><span>product ヒットが複数あると返却されない</span></button>
   </div>
   <div class="answer-reveal">
     <div class="answer-verdict ok">正解</div>
-    <p>AA の THEN は<strong>Greedy（最短）マッチ</strong>を採用する。最初のチェックポイント（A）はできるだけ早いヒットで充足し、その後の B を探す。</p>
+    <p>AA の THEN は<strong>Greedy（貪欲）マッチ</strong>を採用する。最初のチェックポイント（A）は後戻りせず、その時点でできるだけ早いヒットで確定し、その後の B を探す。</p>
     <p>S1 の 1 件目の product ヒットが起点として採用され、その後の purchase（S2）を探す → マッチ。2 件目の product ヒットを起点にしても結果は同じだが、原則は「最初に条件を満たすヒット」が起点になる。</p>
-    <p>Greedy マッチが問題になるのは、例えば <code>A THEN (EXCLUDE A) THEN B</code> のような「A を見た後 A なしに B を見る」構成のとき。最初の A で起点が決まるため注意が必要。</p>
+    <p>この Greedy マッチが問題になるのは、例えば <code>A THEN (EXCLUDE A) THEN B</code> のような「A を見た後 A なしに B を見る」構成のとき。最初の A で起点が決まるため注意が必要。</p>
   </div>
 </div>
 
